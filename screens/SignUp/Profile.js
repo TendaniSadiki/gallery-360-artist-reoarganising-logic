@@ -13,14 +13,13 @@ import AddSocialMedia from "./AddSocialMedia";
 import { useImageFunctions } from "../../hooks/useImageFunctions";
 import useInput from "../../hooks/useDateTimePicker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { getAuth } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import FIRESTORE_DB from "../../firebase/firebase.config.js"
-
+import {FIRESTORE_DB,  FIREBASE_AUTH } from "../../firebase/firebase.config.js"
+import { sendEmailVerification } from "firebase/auth";
 
 const SetupProfileScreen = ({ navigation }) => {
-  const auth = getAuth();
-
+  
+  const auth = FIREBASE_AUTH;
   const [fullName, setFullName] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [website, setWebsite] = useState("");
@@ -71,30 +70,33 @@ const SetupProfileScreen = ({ navigation }) => {
         const user = auth.currentUser; // Get the current user
         if (user) {
           const uid = user.uid; // Get the user's UID
-          console.log(user.uid)
-          // Define the Firestore document reference
-          const userDocRef = doc(FIRESTORE_DB, "artists", uid);
-  
+          console.log("User UID:", uid);
+
           // Define the user data to save
           const userData = {
             fullname: fullName,
             contactnumber: contactNumber,
             websiteurl: website,
-            dateofbirth: input.date.toLocaleDateString(),
+            dateofbirth: input.date ? input.date.toLocaleDateString() : "",
             biography: bio,
-            imageUrl: imageUrl,
-            facebook: facebook,
-            instagram: instagram,
-            videoUrl: videoUrl,
+            imageUrl: imageUrl || "",  // Ensure it's not undefined
+            facebook: facebook || "",  // Ensure it's not undefined
+            instagram: instagram || "",  // Ensure it's not undefined
+            videoUrl: videoUrl || "",
           };
-          console.log(userData)
+          console.log("User Data:", userData);
+
           // Save the profile data to Firestore
+          const userDocRef = doc(FIRESTORE_DB, "artists", uid);
           await setDoc(userDocRef, userData);
-  
-         
-          navigation.navigate("Artwork");
+
+          // Send email verification
+          await sendEmailVerification(user);
+          console.log("Email verification sent");
+
+          // Navigate to the Artwork screen, passing userData
+          navigation.navigate("Artwork", { userData });
         } else {
-          // Handle case where the user is not authenticated
           console.log("User is not authenticated");
           navigation.navigate("Login");
         }

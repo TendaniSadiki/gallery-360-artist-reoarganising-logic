@@ -1,57 +1,50 @@
 import { useEffect, useState } from "react";
 import {
-  setDoc,
+  collection,
   doc,
   getDoc,
-  getDocs,
-  addDoc,
-  query,
-  where,
-  collection,
-  onSnapshot,
 } from "firebase/firestore";
-import { FIRESTORE_DB, storage } from "../firebase/firebase.config";
-import auth from "../firebase/firebase.config.js";
+import { FIRESTORE_DB, FIREBASE_AUTH } from "../firebase/firebase.config";
 
 export const useFetchProfileData = () => {
-  const profilePic = require("../assets/images/userImage.jpg"); // Replace with the actual path to the profile picture
-
-  const sign = require("../assets/images/Jon_Kirsch's_Signature.png");
   const [userData, setUserData] = useState(null);
-  const [name, setName] = useState("John Doe");
-  const [image, setImage] = useState(profilePic);
-  const [dateOfBirth, setDateOfBirth] = useState(null);
-  const [bio, setBio] = useState("John Doe");
-  const [signature, setSignature] = useState(sign);
+  const [name, setName] = useState("");
+  const [image, setImage] = useState(null);
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [bio, setBio] = useState("");
+  const [signature, setSignature] = useState("");
 
   useEffect(() => {
-
-
     const fetchData = async () => {
-      const user = auth.currentUser;
-      const colRef = collection(FIRESTORE_DB, "artists");
-      const q = query(colRef, where("artistUid", "==", user.uid));
+      try {
+        const user = FIREBASE_AUTH.currentUser;
+        if (user) {
+          const userDocRef = doc(FIRESTORE_DB, "artists", user.uid);
+          const userDoc = await getDoc(userDocRef);
 
-      onSnapshot(q, (querySnapshot) => {
-        querySnapshot?.docs.forEach((doc) => {
-     
-          const data = doc.data();
-        
-          console.log("data", data);
-          setUserData(data);
-          setName(data?.artistName);
-          setImage({ uri: data?.photoUrl });
-          setDateOfBirth(data?.dateofbirth);
-          setBio(data?.biography);
-          setSignature({ uri: data?.signature });
-        });
-      });
-      console.log("data profile: ", data);
-   
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            console.log("User Data:", data);
+
+            setUserData(data);
+            setName(data?.artistName || ""); // Only set if data exists
+            setImage(data?.photoUrl ? { uri: data.photoUrl } : null); // Only set if photoUrl exists
+            setDateOfBirth(data?.dateofbirth || ""); // Only set if dateOfBirth exists
+            setBio(data?.biography || ""); // Only set if bio exists
+            setSignature(data?.signature ? { uri: data.signature } : ""); // Only set if signature exists
+          } else {
+            console.log("No user profile found!");
+          }
+        } else {
+          console.log("User is not authenticated");
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      }
     };
 
-    
     fetchData();
   }, []);
+
   return { userData, name, image, dateOfBirth, bio, signature };
 };

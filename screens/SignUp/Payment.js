@@ -11,13 +11,14 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome5"; // Replace "FontAwesome5" with the icon library of your choice.
 import { StackActions } from "@react-navigation/native";
 import { setDoc, doc } from "firebase/firestore";
-import { FIRESTORE_DB, storage } from "../../firebase/firebase.config";
-import auth from "../../firebase/firebase.config.js";
+import { FIRESTORE_DB, storage, FIREBASE_AUTH } from "../../firebase/firebase.config";
+
 import * as ImagePicker from "expo-image-picker";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { addDoc, collection, onSnapshot } from "firebase/firestore";
 
 const PaymentScreen = ({ navigation }) => {
+  const auth = FIREBASE_AUTH;
   const [cardHolder, setCardHolder] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
@@ -58,32 +59,28 @@ const PaymentScreen = ({ navigation }) => {
   };
 
   const user = auth.currentUser;
-  const writeUserData = () => {
-    setDoc(doc(FIRESTORE_DB, "paymentDetails", user.uid), {
-      cardHolder,
-      cardNumber,
-      expiry,
-      cvv,
-      artistUid: user.uid,
-    })
-      .then((result) => {
-        // Success callback
-        console.log("data ", result);
-        alert("data saved");
-      })
-      .catch((error) => {
-        // Error callback
-        alert(error);
-        console.log("error ", error);
+
+  const writeUserData = async () => {
+    try {
+      await setDoc(doc(FIRESTORE_DB, "paymentDetails", user.uid), {
+        cardHolder,
+        cardNumber,
+        expiry,
+        cvv,
+        artistUid: user.uid,
       });
+      console.log("Payment data saved");
+      // Navigate to next screen after successful save
+      navigation.dispatch(StackActions.replace("Tabs"));
+    } catch (error) {
+      console.log("Error saving payment data: ", error);
+      alert("Error saving payment data. Please try again.");
+    }
   };
 
   const handleContinue = () => {
-    // You can perform any action here, such as processing the payment details
-    // For simplicity, we'll just log the data for now.
     if (validateForm()) {
-      writeUserData();
-      navigation.dispatch(StackActions.replace("Tabs"));
+      writeUserData(); // Save the data and navigate
     }
   };
 
@@ -157,11 +154,12 @@ const PaymentScreen = ({ navigation }) => {
           <Text style={styles.buttonText}>Continue</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.button}
-          onPress={() => console.log("might do, might not, might maybe")}
-        >
-          <Text style={styles.smallerButtonText}>I'll do it later</Text>
-        </TouchableOpacity>
+  style={styles.button}
+  onPress={() => navigation.dispatch(StackActions.replace("Tabs"))}
+>
+  <Text style={styles.smallerButtonText}>I'll do it later</Text>
+</TouchableOpacity>
+
       </ScrollView>
     </View>
   );

@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
-  StyleSheet,
   FlatList,
   ScrollView,
 } from "react-native";
 import ProfilePic from "../../../components/ProfilePic.js";
-import ProfileCard from "../../../components/ProfileCard.js";
 import loader2 from "../../../assets/images/loader2.gif";
 import styles from "./styles.js";
 import { useProfileData } from "../../../hooks/useProfilePic.jsx";
@@ -17,37 +15,22 @@ import { useFetchArtworks } from "../../../hooks/useFetchArtworks.jsx";
 import { useCollection } from "../../../hooks/useCollection.jsx";
 
 const ArtworksScreen = ({ navigation }) => {
-  const [navStack, setNavStack] = useState("NewArtwork");
-  const [desc, setDesc] = useState("Make your first sale by adding artwork");
-  const [btnText, setBtnText] = useState("Add Artworks");
   const [menuItems, setMenuItems] = useState(["All"]);
   const [selectedOption, setSelectedOption] = useState("All");
 
-  const { artworkData, firebaseArtworks } = useFetchArtworks();
-  // const { firebaseArtworks } = useFetchArtworks(selectedOption);
-  // Fetch profile data from the server
+  const { firebaseArtworks } = useFetchArtworks();
   const { image, name, userData } = useProfileData();
-
-  // Fetch collection data from the server
   const { collectionData } = useCollection();
 
-  // console.log("userData : ", userData);
-  console.log('artworks');
+  // Update menu items based on collection data
   useEffect(() => {
-    // Set menu items based on collection data
     if (collectionData) {
-      // Extract the "value" property from each object
       const menuItem = collectionData.map((item) => item.value);
-
-      // Use a Set to filter out duplicates
       const uniqueMenuItems = [...new Set(menuItem)];
-
-      // Update the state with the unique menu items
-      setMenuItems([...menuItems, ...uniqueMenuItems]);
+      setMenuItems(["All", ...uniqueMenuItems]); // Include "All" as the default option
     }
   }, [collectionData]);
 
-  // console.log("menuItems", menuItems);
   // Function to handle adding artwork
   const handleAddArtwork = () => {
     navigation.navigate("NewArtwork");
@@ -58,20 +41,9 @@ const ArtworksScreen = ({ navigation }) => {
     // Filter artwork data based on the selected option
     const filteredArtworkData = firebaseArtworks?.filter((artwork) => {
       if (selectedOption === "All") {
-        return true;
+        return true; // Show all artworks if "All" is selected
       }
-
-      const collectionName = artwork.collection.name;
-      console.log("collectionData : ", collectionData);
-      // console.log("name now : ", artwork.collection.name);
-      const artCol = collectionData.find(
-        (item) => item.value === collectionName
-      );
-
-      console.log("artCol : ", artCol);
-      console.log("artCol : ", selectedOption);
-
-      // return collectionData[collectionId]?.name === selectedOption;
+      return artwork.collection?.name === selectedOption; // Match the selected collection
     });
 
     // Render the artwork list
@@ -149,7 +121,6 @@ const ArtworksScreen = ({ navigation }) => {
           ))}
         </ScrollView>
       </View>
-      {/* Profile Card */}
       {renderContent()}
     </View>
   );

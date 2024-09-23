@@ -7,6 +7,8 @@ import {
   StyleSheet,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5"; // Replace "FontAwesome5" with the icon library of your choice.
+import {FIREBASE_AUTH, FIRESTORE_DB } from "../../firebase/firebase.config";
+import { doc, setDoc } from "firebase/firestore";
 
 const MyPage = ({ route, navigation }) => {
   const artworks = [
@@ -40,17 +42,9 @@ const MyPage = ({ route, navigation }) => {
   const [selectedArtworks, setSelectedArtworks] = useState([]);
   const inputRef = useRef();
 
-  console.log('artwork');
-  // const {       fullName,
-  //        contactNumber,
-  //        website,
-  //        dateOfBirth,
-  //        bio,
-  //        imageUrl,
-  //        facebook,
-  //        instagram,
-  //       userid} = route.params.userData
+  const { userData } = route.params; // Get userData passed from previous screen
 
+  // Function to handle artwork selection
   function handleArtworkSelection(artwork) {
     setSelectedArtworks((prevSelected) =>
       prevSelected.includes(artwork)
@@ -58,15 +52,43 @@ const MyPage = ({ route, navigation }) => {
         : [...prevSelected, artwork]
     );
   }
-  const { userData } = route.params;
 
+  // Filter artworks based on query input
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
       return item.toLowerCase().includes(query.toLowerCase());
     });
   }, [items, query]);
 
-  console.log('Userdata in artwork: ', userData);
+  // Function to save artwork selections along with existing user data to Firestore
+  const handleSaveProfile = async () => {
+    try {
+      const auth = FIREBASE_AUTH;
+      const user = auth.currentUser; // Get the authenticated user
+
+      if (user) {
+        const uid = user.uid; // Get user ID
+        const userDocRef = doc(FIRESTORE_DB, "artists", uid); // Firestore document reference
+
+        // Add selected artworks to userData
+        const updatedUserData = {
+          ...userData,
+          selectedArtworks: selectedArtworks, // Add selected artworks
+        };
+
+        // Save updated data to Firestore
+        await setDoc(userDocRef, updatedUserData);
+
+        // Navigate to the next screen after saving
+        navigation.navigate("Signature", { userData: updatedUserData });
+      } else {
+        console.log("User is not authenticated");
+        navigation.navigate("Login");
+      }
+    } catch (error) {
+      console.error("Error saving profile:", error);
+    }
+  };
   return (
     <View style={styles.container}>
       {/* Paragraph */}
@@ -128,7 +150,7 @@ const MyPage = ({ route, navigation }) => {
           style={styles.continueButton}
           onPress={() => navigation.navigate("Signature", { userData })}
         >
-          <Text style={styles.buttonText}>Continue</Text>
+          <Text style={styles.buttonText} onPress={handleSaveProfile}>Continue</Text>
         </TouchableOpacity>
       </View>
     </View>

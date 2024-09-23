@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import Carousel from "react-native-snap-carousel"; // Import the library for the carousel.
 import Icon from "react-native-vector-icons/FontAwesome5";
-import { FIRESTORE_DB, storage } from "../../../firebase/firebase.config";
-import auth from "../../../firebase/firebase.config.js";
+import { FIRESTORE_DB, storage, FIREBASE_AUTH } from "../../../firebase/firebase.config";
+
 // import * as ImagePicker from "expo-image-picker";
 // import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { addDoc, collection, onSnapshot } from "firebase/firestore";
@@ -42,7 +42,7 @@ const NewArtwork = ({ navigation }) => {
 
   console.log('in new artworks index');
   const { collectionData, firebaseCollection } = useCollection();
-
+  const auth = FIREBASE_AUTH;
   const [title, setTitle] = useState("");
   const [isAvailable, setIsAvailable] = useState(false);
   const [artworkType, setArtworkType] = useState([]);

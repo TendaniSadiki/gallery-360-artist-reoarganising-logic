@@ -1,4 +1,4 @@
-//import React from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,70 +7,40 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import React, { useRef, useState } from "react";
 import { SignatureView } from "react-native-signature-capture-view";
-
 import { setDoc, doc, serverTimestamp } from "firebase/firestore";
-import { FIRESTORE_DB, storage } from "../../firebase/firebase.config";
-import auth from "../../firebase/firebase.config.js";
-import * as ImagePicker from "expo-image-picker";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-// import {
-//   addDoc,
-//   collection,
-//   onSnapshotm,
-//   serverTimestamp,
-// } from "firebase/firestore";
-
-//import { db, storage } from "../firebaseConfig";
-// Replace "FontAwesome5" with the icon library of your choice.
+import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebase/firebase.config";
 
 const MyPage = ({ route, navigation }) => {
+  const auth = FIREBASE_AUTH;
   const signatureRef = useRef(null);
-  const [text, setText] = useState("");
-  console.log('signature');
+  const [signature, setSignature] = useState(""); // Holds the captured signature
   const user = auth.currentUser;
-  const { userData } = route.params;
-  console.log('userdata in signature: ', userData);
+  const { userData } = route.params; // User data from the previous screen
+  console.log("Userdata in signature: ", userData);
 
-  const {
-    fullname: fullName,
-    contactnumber: contactNumber,
-    websiteurl: website,
-    dateofbirth: dateOfBirth,
-    biography: bio,
-    imageUrl: imageUrl,
-    facebook: facebook,
-    instagram: instagram,
-    videoUrl: videoUrl,
-  } = userData;
-
+  // Function to save the signature in Firestore
   const writeUserData = () => {
-    console.log('trying to save data');
-    setDoc(doc(FIRESTORE_DB, "artists", user.uid), {
-      artistName: fullName,
-      contactnumber: contactNumber,
-      websiteurl: website,
-      dateofbirth: dateOfBirth,
-      biography: bio,
-      photoUrl: imageUrl,
-      facebook: facebook,
-      instagram: instagram,
-      artistUid: user.uid,
-      videoUrl: videoUrl,
-      signature: text,
-      isEnabled: false,
-      timeStamp: serverTimestamp(),
-    })
-      .then((result) => {
-        // Success callback
-        console.log("data ", result);
-        Alert.alert("Your Data Is Saved Successfully");
+    if (!signature) {
+      Alert.alert("Please capture your signature before uploading.");
+      return;
+    }
+
+    setDoc(
+      doc(FIRESTORE_DB, "artists", user.uid), 
+      {
+        signature: signature, // Save the captured signature
+        isEnabled: false, // Setting the user profile as not yet enabled
+        timeStamp: serverTimestamp(), // Add a timestamp
+      },
+      { merge: true } // Merge to avoid overwriting existing data
+    )
+      .then(() => {
+        Alert.alert("Your signature has been uploaded successfully!");
       })
       .catch((error) => {
-        // Error callback
-        Alert.alert("There was an error capturing your data");
-        console.log("error ", error);
+        Alert.alert("Error uploading signature. Please try again.");
+        console.log("Error saving signature: ", error);
       });
   };
 
@@ -84,57 +54,50 @@ const MyPage = ({ route, navigation }) => {
         <Text style={styles.paragraph}>
           This signature will be used as proof of authenticity for your artwork.
         </Text>
+        
+        {/* Signature Capture Component */}
         <SignatureView
           style={{
             borderWidth: 2,
-            flex: 1
+            flex: 1,
           }}
           ref={signatureRef}
           // onSave is automatically called whenever signature-pad onEnd is called and saveSignature is called
           onSave={(val) => {
-            //  a base64 encoded image
-            console.log("saved signature");
-            console.log('signatureVal: ', val);
-            setText(val);
+            console.log("Saved signature:", val);
+            setSignature(val); // Correct function to update signature state
           }}
           onClear={() => {
-            console.log("cleared signature");
-            setText("");
+            console.log("Cleared signature");
+            setSignature(""); // Correct function to clear signature
           }}
         />
-        <View
-          style={{ flexDirection: "row", justifyContent: "center", height: 50 }}
-        >
+
+        {/* Clear and Save Signature Actions */}
+        <View style={{ flexDirection: "row", justifyContent: "center", height: 50 }}>
           <TouchableOpacity
-            style={{
-              justifyContent: "center",
-              alignItems: "center",
-              color: "white",
-              flex: 1,
-            }}
-            onPress={() => {
-              signatureRef.current.clearSignature();
-            }}
+            style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
+            onPress={() => signatureRef.current.clearSignature()}
           >
             <Text style={{ color: "white" }}>Clear</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={{
-              justifyContent: "center",
-              alignItems: "center",
-
-              flex: 1,
-            }}
-            onPress={() => {
-              signatureRef.current.saveSignature();
-            }}
+            style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
+            onPress={() => signatureRef.current.saveSignature()}
           >
             <Text style={{ color: "white" }}>Save</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={[styles.button, { marginVertical: 20, marginHorizontal: 20 }]} onPress={() => writeUserData()}>
+
+        {/* Upload Signature Button */}
+        <TouchableOpacity
+          style={[styles.button, { marginVertical: 20, marginHorizontal: 20 }]}
+          onPress={writeUserData}
+        >
           <Text style={styles.smallerButtonText}>UPLOAD SIGNATURE</Text>
         </TouchableOpacity>
+
+        {/* Continue Button */}
         <TouchableOpacity
           style={styles.continueButton}
           onPress={() => navigation.navigate("Payment")}
@@ -142,11 +105,9 @@ const MyPage = ({ route, navigation }) => {
           <Text style={styles.buttonText}>Continue</Text>
         </TouchableOpacity>
       </ScrollView>
-
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
