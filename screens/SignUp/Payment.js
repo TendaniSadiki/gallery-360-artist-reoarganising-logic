@@ -7,35 +7,34 @@ import {
   StyleSheet,
   Image,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome5"; // Replace "FontAwesome5" with the icon library of your choice.
 import { StackActions } from "@react-navigation/native";
 import { setDoc, doc } from "firebase/firestore";
-import { FIRESTORE_DB, storage, FIREBASE_AUTH } from "../../firebase/firebase.config";
-
-import * as ImagePicker from "expo-image-picker";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { addDoc, collection, onSnapshot } from "firebase/firestore";
+import { FIRESTORE_DB, FIREBASE_AUTH } from "../../firebase/firebase.config";
+import { sendEmailVerification } from "firebase/auth";
 
 const PaymentScreen = ({ navigation }) => {
   const auth = FIREBASE_AUTH;
+  
+  const user = auth.currentUser;
+
+  // Define state variables
   const [cardHolder, setCardHolder] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   const [errors, setErrors] = useState({});
-  console.log('payment');
+  const [loading, setLoading] = useState(false);
+
+  // Form validation
   const validateForm = () => {
-    console.log("validateForm is hit");
     let errors = {};
-    // Ensures at least first and last name
     if (cardHolder.trim() === "") {
       errors.cardHolder = "Card holder is required";
     } else if (!/^[a-zA-Z]+ [a-zA-Z]+$/.test(cardHolder)) {
       errors.cardHolder = "Please enter a valid full name (e.g., John Doe)";
     }
-
-    // Matches only digits
     if (!cardNumber) {
       errors.cardNumber = "Card number is required";
     } else if (cardNumber.length < 14) {
@@ -43,25 +42,17 @@ const PaymentScreen = ({ navigation }) => {
     } else if (!/^\d+$/.test(cardNumber)) {
       errors.cardNumber = "Please enter a valid card number (digits only)";
     }
-
     if (!expiry) {
       errors.expiry = "Expiry date is required";
     }
-
-    // if (!cvv) {
-    //   errors.cvv = "Profile image is required";
-    // } else if (!/^\d+$/.test(cvv)) {
-    //   errors.cvv = "Please enter a valid card number (digits only)";
-    // }
-
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  const user = auth.currentUser;
-
+  // Write payment data to Firestore
   const writeUserData = async () => {
     try {
+      setLoading(true); // Start loading
       await setDoc(doc(FIRESTORE_DB, "paymentDetails", user.uid), {
         cardHolder,
         cardNumber,
@@ -70,18 +61,38 @@ const PaymentScreen = ({ navigation }) => {
         artistUid: user.uid,
       });
       console.log("Payment data saved");
-      // Navigate to next screen after successful save
-      navigation.dispatch(StackActions.replace("Tabs"));
+
+      // Check if email is verified, if not, send verification
+      if (user && !user.emailVerified) {
+        await sendEmailVerification(user);
+        alert("Email verification sent. Please check your inbox.");
+      }
+
+      // Navigate to login
+      navigation.dispatch(StackActions.replace("Login"));
     } catch (error) {
       console.log("Error saving payment data: ", error);
       alert("Error saving payment data. Please try again.");
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
+  // Handle Continue button click
   const handleContinue = () => {
     if (validateForm()) {
-      writeUserData(); // Save the data and navigate
+      writeUserData(); // Save data and send the email
     }
+  };
+
+  // Skip Button - directly navigate to login
+  const handleSkip = () => {
+    if (user && !user.emailVerified) {
+      sendEmailVerification(user)
+        .then(() => alert("Email verification sent. Please check your inbox."))
+        .catch((error) => console.error("Error sending email:", error));
+    }
+    navigation.dispatch(StackActions.replace("Login"));
   };
 
   return (
@@ -89,12 +100,7 @@ const PaymentScreen = ({ navigation }) => {
       <ScrollView>
         <View style={styles.imageContainer}>
           <Image
-            style={{
-              width: 300,
-              height: 220,
-              alignSelf: "center",
-              borderRadius: 50,
-            }}
+            style={styles.image}
             source={require("../../assets/images/visa.png")}
           />
         </View>
@@ -102,6 +108,7 @@ const PaymentScreen = ({ navigation }) => {
         <Text style={styles.paragraph}>
           Payment account that will be used to receive payments
         </Text>
+
         {/* Card Holder Input */}
         <TextInput
           style={styles.input}
@@ -110,9 +117,8 @@ const PaymentScreen = ({ navigation }) => {
           value={cardHolder}
           onChangeText={setCardHolder}
         />
-        {errors.website ? (
-          <Text style={styles.errorMessage}>{errors.website}</Text>
-        ) : null}
+        {errors.cardHolder && <Text style={styles.errorMessage}>{errors.cardHolder}</Text>}
+
         {/* Card Number Input */}
         <TextInput
           style={styles.input}
@@ -121,10 +127,10 @@ const PaymentScreen = ({ navigation }) => {
           value={cardNumber}
           onChangeText={setCardNumber}
           keyboardType="numeric"
+          maxLength={16}
         />
-        {errors.cardNumber ? (
-          <Text style={styles.errorMessage}>{errors.cardNumber}</Text>
-        ) : null}
+        {errors.cardNumber && <Text style={styles.errorMessage}>{errors.cardNumber}</Text>}
+
         {/* Expiry Input */}
         <TextInput
           style={styles.input}
@@ -134,9 +140,8 @@ const PaymentScreen = ({ navigation }) => {
           onChangeText={setExpiry}
           keyboardType="numeric"
         />
-        {errors.expiry ? (
-          <Text style={styles.errorMessage}>{errors.expiry}</Text>
-        ) : null}
+        {errors.expiry && <Text style={styles.errorMessage}>{errors.expiry}</Text>}
+
         {/* CVV Input */}
         <TextInput
           style={styles.input}
@@ -145,25 +150,22 @@ const PaymentScreen = ({ navigation }) => {
           value={cvv}
           onChangeText={setCvv}
           keyboardType="numeric"
+          maxLength={4}
         />
-        {/* Continue Button */}
-        <TouchableOpacity
-          style={styles.continueButton}
-          onPress={handleContinue}
-        >
-          <Text style={styles.buttonText}>Continue</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-  style={styles.button}
-  onPress={() => navigation.dispatch(StackActions.replace("Tabs"))}
->
-  <Text style={styles.smallerButtonText}>I'll do it later</Text>
-</TouchableOpacity>
 
+        {/* Continue Button */}
+        <TouchableOpacity style={styles.continueButton} onPress={handleContinue} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Continue</Text>}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.button} onPress={handleSkip}>
+          <Text style={styles.smallerButtonText}>I'll do it later</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

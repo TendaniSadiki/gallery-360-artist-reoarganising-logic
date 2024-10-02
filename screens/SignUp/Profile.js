@@ -14,20 +14,21 @@ import { useImageFunctions } from "../../hooks/useImageFunctions";
 import useInput from "../../hooks/useDateTimePicker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { doc, setDoc } from "firebase/firestore";
-import {FIRESTORE_DB,  FIREBASE_AUTH } from "../../firebase/firebase.config.js"
-import { sendEmailVerification } from "firebase/auth";
+import { FIRESTORE_DB, FIREBASE_AUTH } from "../../firebase/firebase.config.js";
 
 const SetupProfileScreen = ({ navigation }) => {
   
   const auth = FIREBASE_AUTH;
   const [fullName, setFullName] = useState("");
   const [contactNumber, setContactNumber] = useState("");
+  const [location, setLocation] = useState("");
   const [website, setWebsite] = useState("");
   const [bio, setBio] = useState("");
   const [modalIsVisible, setModalIsVisible] = useState(false);
   const [instagram, setInstagram] = useState("");
   const [facebook, setFacebook] = useState("");
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false); 
 
   const input = useInput();
   const { pickOneImage, image, imageUrl, video, videoUrl, progress, pickVideo } = useImageFunctions();
@@ -76,6 +77,7 @@ const SetupProfileScreen = ({ navigation }) => {
           const userData = {
             fullname: fullName,
             contactnumber: contactNumber,
+            location: location,
             websiteurl: website,
             dateofbirth: input.date ? input.date.toLocaleDateString() : "",
             biography: bio,
@@ -89,10 +91,6 @@ const SetupProfileScreen = ({ navigation }) => {
           // Save the profile data to Firestore
           const userDocRef = doc(FIRESTORE_DB, "artists", uid);
           await setDoc(userDocRef, userData);
-
-          // Send email verification
-          await sendEmailVerification(user);
-          console.log("Email verification sent");
 
           // Navigate to the Artwork screen, passing userData
           navigation.navigate("Artwork", { userData });
@@ -108,6 +106,7 @@ const SetupProfileScreen = ({ navigation }) => {
 
   const handleOpenModal = () => setModalIsVisible(true);
   const handleCloseModal = () => setModalIsVisible(false);
+
 
   return (
     <View style={styles.container}>
@@ -205,7 +204,17 @@ const SetupProfileScreen = ({ navigation }) => {
             keyboardType="numeric"
           />
           {errors.contactNumber && <Text style={styles.errorMessage}>{errors.contactNumber}</Text>}
-
+          <TextInput
+            style={styles.input}
+            placeholder="LOCATION"
+            placeholderTextColor="white"
+            value={location}
+            onChangeText={(text) => {
+              setErrors({});
+              setLocation(text);
+            }}
+          />
+          {errors.location && <Text style={styles.errorMessage}>{errors.location}</Text>}
           <TextInput
             style={styles.input}
             placeholder="WEBSITE"
