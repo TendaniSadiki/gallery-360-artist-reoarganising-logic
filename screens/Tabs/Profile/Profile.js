@@ -1,25 +1,58 @@
-import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, Linking, ScrollView } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Linking,
+  ScrollView,
+} from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import { signOut } from "firebase/auth";
 import auth from "../../../firebase/firebase.config.js";
 import loader2 from "../../../assets/images/loader2.gif";
+import * as LocalAuthentication from "expo-local-authentication"; // For biometric authentication
 import styles from "./styles.js";
 import { useFetchProfileData } from "../../../hooks/useFetchProfileData.jsx";
-import { useFetchCardData } from "../../../hooks/useFetchCardData"; // Import the custom hook to fetch card data
+import { useFetchCardData } from "../../../hooks/useFetchCardData"; // Custom hook for card data
 
 const SetupProfileScreen = ({ navigation }) => {
-  console.log("in profile");
-
   const { userData, name, image, dateOfBirth, bio, signature } = useFetchProfileData();
-  const { cardHolder, cardNumber, expiry, cvv } = useFetchCardData(); // Fetch card information using the custom hook
-  console.log(useFetchCardData)
-  const Imageloader = () => {
-    return (
-      <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", flex: 1 }}>
-        <Image source={loader2} />
-      </View>
-    );
+  const { cardHolder, cardNumber, expiry, cvv } = useFetchCardData();
+
+  const [cardNumberVisible, setCardNumberVisible] = useState(false);
+  const [cvvVisible, setCvvVisible] = useState(false);
+
+  // Function to handle biometric authentication
+  const authenticateUser = async () => {
+    try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const supported = await LocalAuthentication.isEnrolledAsync();
+
+      if (hasHardware && supported) {
+        const result = await LocalAuthentication.authenticateAsync({
+          promptMessage: "Authenticate to view sensitive card info",
+        });
+        return result.success;
+      } else {
+        alert("Biometric authentication not supported on this device.");
+        return false;
+      }
+    } catch (error) {
+      console.error("Biometric auth error: ", error);
+      return false;
+    }
+  };
+
+  const handleToggleCardNumberVisibility = async () => {
+    const authResult = await authenticateUser();
+    if (authResult) setCardNumberVisible(!cardNumberVisible);
+  };
+
+  const handleToggleCVVVisibility = async () => {
+    const authResult = await authenticateUser();
+    if (authResult) setCvvVisible(!cvvVisible);
   };
 
   const handleSignOut = async () => {
@@ -47,20 +80,24 @@ const SetupProfileScreen = ({ navigation }) => {
               style={{ width: 150, height: 150, alignSelf: "center", borderRadius: 75 }}
               source={image}
             />
-            <Text style={{ color: "white", fontSize: 22, fontWeight: "bold", padding: 5 }}>{name}</Text>
-            <Text style={{ color: "white", fontSize: 14, fontWeight: "bold", padding: 5 }}>{dateOfBirth}</Text>
+            <Text style={{ color: "white", fontSize: 22, fontWeight: "bold", padding: 5 }}>
+              {name}
+            </Text>
+            <Text style={{ color: "white", fontSize: 14, fontWeight: "bold", padding: 5 }}>
+              {dateOfBirth}
+            </Text>
 
             <View style={styles.iconContainer}>
               <TouchableOpacity
                 onPress={() => {
-                  Linking.openURL("https://" + userData.facebook);
+                  Linking.openURL("https://" + userData?.facebook);
                 }}
               >
                 <Icon name="facebook" size={25} style={{ padding: 10 }} color="gray" />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
-                  Linking.openURL("https://" + userData.instagram);
+                  Linking.openURL("https://" + userData?.instagram);
                 }}
               >
                 <Icon name="instagram" size={25} style={{ padding: 10 }} color="gray" />
@@ -81,7 +118,12 @@ const SetupProfileScreen = ({ navigation }) => {
           </View>
           <View style={styles.subHeadersContainer}>
             <Text style={styles.subHeaders}>Card Number:</Text>
-            <Text style={styles.subHeaders}>{cardNumber ? `**** **** **** ${cardNumber.slice(-4)}` : "N/A"}</Text>
+            <Text style={styles.subHeaders}>
+              {cardNumberVisible ? cardNumber : `**** **** **** ${cardNumber?.slice(-4)}`}
+            </Text>
+            <TouchableOpacity onPress={handleToggleCardNumberVisibility}>
+              <Icon name={cardNumberVisible ? "eye-slash" : "eye"} size={20} color="gray" />
+            </TouchableOpacity>
           </View>
           <View style={styles.subHeadersContainer}>
             <Text style={styles.subHeaders}>Expiry:</Text>
@@ -89,7 +131,10 @@ const SetupProfileScreen = ({ navigation }) => {
           </View>
           <View style={styles.subHeadersContainer}>
             <Text style={styles.subHeaders}>CVV:</Text>
-            <Text style={styles.subHeaders}>{cvv ? `***` : "N/A"}</Text>
+            <Text style={styles.subHeaders}>{cvvVisible ? cvv : "***"}</Text>
+            <TouchableOpacity onPress={handleToggleCVVVisibility}>
+              <Icon name={cvvVisible ? "eye-slash" : "eye"} size={20} color="gray" />
+            </TouchableOpacity>
           </View>
 
           <Text style={styles.profileHeader}>Help & Info</Text>

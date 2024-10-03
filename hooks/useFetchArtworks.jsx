@@ -14,32 +14,39 @@ export const useFetchArtworks = () => {
 
   useEffect(() => {
     const user = auth.currentUser;
-
+    console.log("User:", user);
+  
     if (user) {
       const colRef = collection(FIRESTORE_DB, "Market");
-      const q = query(colRef, where("artists", "==", user.uid));
-
+      const q = query(colRef, where("artistUid", "==", user.uid));
+      
+      console.log("Querying Firestore...");
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const collection = querySnapshot.docs.map((doc) => ({
-          ...doc.data(),
-          key: doc.id,
-        }));
-
-        // Map artwork names into artworkData state
-        const artworkItems = collection.map((item) => ({
-          value: item.name,
-          key: item.key,
-        }));
-
-        setArtworkData(artworkItems);
-        setFirebaseArtworks(collection);
-        console.log("ArtworkData: ", artworkItems);
+        console.log("Snapshot size:", querySnapshot.size);
+  
+        if (!querySnapshot.empty) {
+          const collection = querySnapshot.docs.map((doc) => ({
+            ...doc.data(),
+            key: doc.id,
+          }));
+  
+          const artworkItems = collection.map((item) => ({
+            value: item.name,
+            key: item.key,
+          }));
+  
+          setArtworkData(artworkItems);
+          setFirebaseArtworks(collection);
+          console.log("ArtworkData: ", artworkItems);
+        } else {
+          console.log("No artworks found for this user.");
+        }
       });
-
-      // Cleanup listener on unmount
+  
       return () => unsubscribe();
     }
   }, []);
+  
 
   return { artworkData, firebaseArtworks };
 };

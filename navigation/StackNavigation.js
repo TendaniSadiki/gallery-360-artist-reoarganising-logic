@@ -36,6 +36,7 @@ import Profiles from "../screens/Tabs/Profile/Profile";
 import EditProfile from "../screens/Tabs/Profile/ProfileShow";
 //Dashboard
 import DashboardScreen from "../screens/Tabs/Dashboard/Dashboard";
+import FIREBASE_AUTH from "../firebase/firebase.config";
 
 //import Artworks from "../screens/Artworks/Artworks";
 

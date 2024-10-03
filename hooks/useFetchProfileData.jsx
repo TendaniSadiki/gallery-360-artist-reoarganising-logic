@@ -13,7 +13,7 @@ export const useFetchProfileData = () => {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [bio, setBio] = useState("");
   const [signature, setSignature] = useState("");
-
+  console.log(name)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -27,7 +27,7 @@ export const useFetchProfileData = () => {
             console.log("User Data:", data);
 
             setUserData(data);
-            setName(data?.artistName || ""); // Only set if data exists
+            setName(data?.fullname || ""); // Only set if data exists
             setImage(data?.photoUrl ? { uri: data.photoUrl } : null); // Only set if photoUrl exists
             setDateOfBirth(data?.dateofbirth || ""); // Only set if dateOfBirth exists
             setBio(data?.biography || ""); // Only set if bio exists

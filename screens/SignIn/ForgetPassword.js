@@ -7,24 +7,34 @@ import {
   TextInput,
   Modal,
 } from "react-native";
-//import SpashScreen from "./screens/OnBording/SpashScreen.js";
-export default function App(props) {
-  console.log('in forgot password');
+import { FIREBASE_AUTH } from "../../firebase/firebase.config";
+import { sendPasswordResetEmail } from "firebase/auth";
+
+export default function ForgetPassword({ isModalVisible, handleCloseModal }) {
   const [email, setEmail] = useState("");
-  // const [password, setPassword] = useState("");
 
-  const handleSignIn = () => {
-    console.log("signed in!!!");
-    props.closeModal();
+  const handlePasswordReset = async () => {
+    try {
+      if (!email) {
+        alert("Please enter a valid email.");
+        return;
+      }
+
+      // Send the password reset email using the Firebase method
+      await sendPasswordResetEmail(FIREBASE_AUTH, email);
+      alert("Password reset email sent!");
+      handleCloseModal(); // Close the modal after sending the reset email
+    } catch (error) {
+      alert(`Failed to send reset email: ${error.message}`);
+    }
   };
-  console.log('forgot password');
-  return (
-    <Modal visible={props.visible} animationType="slide">
-      <View style={styles.container}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.header}>Forget Password</Text>
 
-          <Text style={styles.smallerText}> create your new account</Text>
+  return (
+    <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.header}>Forget Password</Text>
+          <Text style={styles.smallerText}>Enter your email to reset your password</Text>
 
           <TextInput
             style={styles.input}
@@ -34,11 +44,13 @@ export default function App(props) {
             onChangeText={setEmail}
           />
 
-          <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
+          {/* Reset Password Button */}
+          <TouchableOpacity style={styles.signInButton} onPress={handlePasswordReset}>
             <Text style={styles.buttonText}>RESET PASSWORD</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button} onPress={props.closeModal}>
+          {/* Cancel Button */}
+          <TouchableOpacity style={styles.button} onPress={handleCloseModal}>
             <Text style={styles.buttonText}>CANCEL</Text>
           </TouchableOpacity>
         </View>
@@ -48,28 +60,31 @@ export default function App(props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: "black",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
+    justifyContent: "center",
+    alignItems: "center",
   },
-  smallerText: {
-    color: "white",
-    marginRight: 135,
+  modalContainer: {
+    width: "80%",
+    padding: 20,
+    backgroundColor: "black",
+    borderRadius: 10,
+    alignItems: "center",
   },
   header: {
-    fontSize: 38,
+    fontSize: 24,
     fontWeight: "bold",
     marginBottom: 10,
     color: "white",
   },
-  inputContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "transparent", // Set this to your desired background color for the whole screen
+  smallerText: {
+    color: "white",
+    marginBottom: 20,
   },
   input: {
-    width: "80%",
+    width: "100%",
     height: 50,
     fontSize: 16,
     borderBottomWidth: 1,
@@ -77,27 +92,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 20,
     color: "#fff",
-    textDecorationColor: "white",
   },
   signInButton: {
-    width: "80%",
+    width: "100%",
     height: 50,
-    backgroundColor: "#CEB89E", // Set this to your desired button background color
+    backgroundColor: "#CEB89E", // Button color
     borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: 10,
   },
   buttonText: {
-    color: "#fff", // Set this to your desired button text color
+    color: "#fff",
     fontSize: 16,
   },
   button: {
-    backgroundColor: "transparent", // Set this to your desired button color
-    width: "80%",
+    width: "100%",
     height: 50,
-    // Set this to your desired button background color
     borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "transparent",
+    borderColor: "#CEB89E",
+    borderWidth: 1, // Add a border to distinguish the button
   },
 });

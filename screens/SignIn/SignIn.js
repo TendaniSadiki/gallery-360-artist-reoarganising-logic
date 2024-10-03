@@ -24,13 +24,30 @@ export default function App({ navigation }) {
   const [isLoading, setIsLoading] = useState(false)
 
   console.log('in sign in');
-  const handleOpenModal = () => {
-    setModalIsVisible(true);
-  };
+  
+  const authenticateWithBiometrics = async () => {
+    try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const supported = await LocalAuthentication.isEnrolledAsync();
 
-  const handleCloseModal = () => {
-    setModalIsVisible(false);
+      if (hasHardware && supported) {
+        const result = await LocalAuthentication.authenticateAsync({
+          promptMessage: "Authenticate to sign in",
+          fallbackLabel: "Use Passcode",
+        });
+        return result.success;
+      } else {
+        Alert.alert("Biometric authentication not supported on this device.");
+        return false;
+      }
+    } catch (error) {
+      console.error("Biometric authentication error:", error);
+      return false;
+    }
   };
+  const [isModalVisible, setModalVisible] = useState(false);
+  const handleOpenModal = () => setModalVisible(true);
+  const handleCloseModal = () => setModalVisible(false);
   console.log('Sign in');
   //const auth = getAuth(app);
 
@@ -60,46 +77,57 @@ export default function App({ navigation }) {
   }, []);
 
   const handleLogin = async () => {
-    setIsLoading(true);
-    try {
-      // Sign in the user with email and password
-      const userCredentials = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredentials.user;
-  
-      // Check if the user's email is verified
-      if (!user.emailVerified) {
-        // Handle email not verified
-        Alert.alert(
-          "Email Not Verified",
-          "Please verify your email before signing in.",
-          [{ text: "OK" }]
-        );
-        // Optionally sign the user out
-        await auth.signOut();
-        setIsLoading(false);
-        return;
-      }
-  
-      // Email is verified, navigate to the next screen
-      console.log("Logged in with:", user.email);
+  setIsLoading(true);
+
+  // If email and password are both empty, prompt for biometric authentication
+  if (!email && !password) {
+    const isAuthenticated = await authenticateWithBiometrics();
+    if (!isAuthenticated) {
       setIsLoading(false);
-      navigation.replace("Tabs");
-    } catch (error) {
-      setIsLoading(false);
-      if (error.code === "auth/wrong-password") {
-        // Handle incorrect password error
-        console.log("Your password is incorrect. Please try again.");
-        Alert.alert("Your password is incorrect. Please try again.");
-      } else if (error.code === "auth/wrong-email") {
-        // Handle other authentication errors
-        Alert.alert("Enter a Valid Email");
-        console.error("Authentication error:", error);
-      } else {
-        console.error("Authentication error:", error);
-        Alert.alert("Failed to connect to the database");
-      }
+      return; // Stop execution if biometric authentication fails
     }
-  };
+  }
+
+  try {
+    // Sign in the user with email and password
+    const userCredentials = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredentials.user;
+
+    // Check if the user's email is verified
+    if (!user.emailVerified) {
+      // Handle email not verified
+      Alert.alert(
+        "Email Not Verified",
+        "Please verify your email before signing in.",
+        [{ text: "OK" }]
+      );
+      // Optionally sign the user out
+      await auth.signOut();
+      setIsLoading(false);
+      return;
+    }
+
+    // Email is verified, navigate to the next screen
+    console.log("Logged in with:", user.email);
+    setIsLoading(false);
+    navigation.replace("Tabs");
+  } catch (error) {
+    setIsLoading(false);
+    
+    // Improved error handling for various authentication errors
+    if (error.code === "auth/wrong-password") {
+      Alert.alert("Error", "Your password is incorrect. Please try again.");
+    } else if (error.code === "auth/wrong-email") {
+      Alert.alert("Error", "The email address is not registered.");
+    } else if (error.code === "auth/user-not-found") {
+      Alert.alert("Error", "No user found with this email.");
+    } else {
+      console.error("Authentication error:", error);
+      Alert.alert("Error", "Failed to connect to the database. Please try again later.");
+    }
+  }
+};
+
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -138,7 +166,7 @@ export default function App({ navigation }) {
             value={password}
             onChangeText={setPassword}
           />
-
+          
           <TouchableOpacity style={styles.button} onPress={handleOpenModal}>
             <Text style={styles.smallerButtonText}>I forgot my password</Text>
           </TouchableOpacity>
@@ -157,6 +185,7 @@ export default function App({ navigation }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <ForgetPassword isModalVisible={isModalVisible} handleCloseModal={handleCloseModal} />
     </View>
   );
 }
