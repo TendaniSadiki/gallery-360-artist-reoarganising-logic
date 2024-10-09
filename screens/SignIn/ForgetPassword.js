@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   TouchableOpacity,
   StyleSheet,
@@ -12,20 +12,38 @@ import { sendPasswordResetEmail } from "firebase/auth";
 
 export default function ForgetPassword({ isModalVisible, handleCloseModal }) {
   const [email, setEmail] = useState("");
-
+  const [errors, setErrors] = useState({}); // Track errors for input fields
+  const [message, setMessage] = useState(""); // To show success messages
+  console.log("Resetting password")
   const handlePasswordReset = async () => {
-    try {
-      if (!email) {
-        alert("Please enter a valid email.");
-        return;
-      }
+    // Clear previous errors
+    setErrors({});
+    setMessage("");
 
-      // Send the password reset email using the Firebase method
+    const newErrors = {};
+
+    // Basic validation for email
+    if (!email.trim()) {
+      newErrors.email = "Please enter your email.";
+    } else if (!/\S+@\S+\.\S{2,}/.test(email.replace(/ /g, ""))) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+
+    // If there are validation errors, update the errors state and exit
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    try {
+      // Send the password reset email using Firebase
       await sendPasswordResetEmail(FIREBASE_AUTH, email);
-      alert("Password reset email sent!");
-      handleCloseModal(); // Close the modal after sending the reset email
+      setMessage("Password reset email sent successfully!");
+      setEmail(""); // Clear email input on success
     } catch (error) {
-      alert(`Failed to send reset email: ${error.message}`);
+      console.error("Password Reset Error:", error);
+      // Set a general error message
+      setErrors({ email: "Failed to send reset email. Please try again later." });
     }
   };
 
@@ -36,13 +54,23 @@ export default function ForgetPassword({ isModalVisible, handleCloseModal }) {
           <Text style={styles.header}>Forget Password</Text>
           <Text style={styles.smallerText}>Enter your email to reset your password</Text>
 
+          {/* Email Input */}
           <TextInput
-            style={styles.input}
+            style={[styles.input, errors.email && styles.inputError]}
             placeholder="Email"
             placeholderTextColor="white"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => {
+              setEmail(text);
+              setErrors({}); // Clear error when user types
+              setMessage(""); // Clear success message on new input
+            }}
           />
+          {/* Display error message for email */}
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+          
+          {/* Display success message */}
+          {message && <Text style={styles.successText}>{message}</Text>}
 
           {/* Reset Password Button */}
           <TouchableOpacity style={styles.signInButton} onPress={handlePasswordReset}>
@@ -90,8 +118,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
     paddingHorizontal: 12,
-    marginBottom: 20,
+    marginBottom: 10,
     color: "#fff",
+  },
+  inputError: {
+    borderColor: "red",
+    borderWidth: 1,
   },
   signInButton: {
     width: "100%",
@@ -114,6 +146,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "transparent",
     borderColor: "#CEB89E",
-    borderWidth: 1, // Add a border to distinguish the button
+    borderWidth: 1,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  successText: {
+    color: "green",
+    fontSize: 12,
+    marginBottom: 10,
+    textAlign: "center",
   },
 });

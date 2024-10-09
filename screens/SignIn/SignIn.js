@@ -20,51 +20,18 @@ export default function App({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [modalIsVisible, setModalIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState({});
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false); // New state to manage password visibility
 
   console.log('in sign in');
-  
-  const authenticateWithBiometrics = async () => {
-    try {
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      const supported = await LocalAuthentication.isEnrolledAsync();
 
-      if (hasHardware && supported) {
-        const result = await LocalAuthentication.authenticateAsync({
-          promptMessage: "Authenticate to sign in",
-          fallbackLabel: "Use Passcode",
-        });
-        return result.success;
-      } else {
-        Alert.alert("Biometric authentication not supported on this device.");
-        return false;
-      }
-    } catch (error) {
-      console.error("Biometric authentication error:", error);
-      return false;
-    }
-  };
+
   const [isModalVisible, setModalVisible] = useState(false);
-  const handleOpenModal = () => setModalVisible(true);
-  const handleCloseModal = () => setModalVisible(false);
+  const handleOpenModal = () => setModalVisible(true, console.log('open modal'));
+  const handleCloseModal = () => setModalVisible(false, console.log('close modal'));
   console.log('Sign in');
-  //const auth = getAuth(app);
 
-  // async function handleSignIn() {
-  //   if (email === "" || password === "") {
-  //     setError("Email and password are mandatory.");
-  //     Alert(error)
-  //     return;
-  //   }
-
-  //   try {
-  //     await signInWithEmailAndPassword(auth, email, password);
-  //   } catch (err) {
-  //     console.log(err);
-  //     setError(err.message);
-  //   }
-  // }
 
   useEffect(() => {
     console.log({ authInSignIn: auth });
@@ -77,56 +44,61 @@ export default function App({ navigation }) {
   }, []);
 
   const handleLogin = async () => {
-  setIsLoading(true);
+    setIsLoading(true);
 
-  // If email and password are both empty, prompt for biometric authentication
-  if (!email && !password) {
-    const isAuthenticated = await authenticateWithBiometrics();
-    if (!isAuthenticated) {
-      setIsLoading(false);
-      return; // Stop execution if biometric authentication fails
+    // Initialize an empty errors object
+    const newErrors = {};
+
+    // Basic email and password validation before sign-in
+    if (!email.trim()) {
+      newErrors.email = "Please enter a valid email.";
+    } else if (!/\S+@\S+\.\S{2,}/.test(email.replace(/ /g, ""))) {
+      newErrors.email = "Please enter a valid email address.";
     }
-  }
 
-  try {
-    // Sign in the user with email and password
-    const userCredentials = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredentials.user;
+    if (!password) {
+      newErrors.password = "Please enter your password.";
+    }
 
-    // Check if the user's email is verified
-    if (!user.emailVerified) {
-      // Handle email not verified
-      Alert.alert(
-        "Email Not Verified",
-        "Please verify your email before signing in.",
-        [{ text: "OK" }]
-      );
-      // Optionally sign the user out
-      await auth.signOut();
+    // If errors are found, update the state and return
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       setIsLoading(false);
       return;
     }
 
-    // Email is verified, navigate to the next screen
-    console.log("Logged in with:", user.email);
-    setIsLoading(false);
-    navigation.replace("Tabs");
-  } catch (error) {
-    setIsLoading(false);
-    
-    // Improved error handling for various authentication errors
-    if (error.code === "auth/wrong-password") {
-      Alert.alert("Error", "Your password is incorrect. Please try again.");
-    } else if (error.code === "auth/wrong-email") {
-      Alert.alert("Error", "The email address is not registered.");
-    } else if (error.code === "auth/user-not-found") {
-      Alert.alert("Error", "No user found with this email.");
-    } else {
-      console.error("Authentication error:", error);
-      Alert.alert("Error", "Failed to connect to the database. Please try again later.");
+    try {
+      // Sign in the user with email and password
+      const userCredentials = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredentials.user;
+
+      // Check if the user's email is verified
+      if (!user.emailVerified) {
+        setErrors({ email: "Please verify your email before signing in." });
+        await auth.signOut();
+        setIsLoading(false);
+        return;
+      }
+
+      // If successful, reset errors and navigate to the next screen
+      setErrors({});
+      console.log("Logged in with:", user.email);
+      setIsLoading(false);
+      navigation.replace("Tabs");
+    } catch (error) {
+      // Handle various Firebase authentication errors and set error messages
+      if (error.code === "auth/wrong-password") {
+        setErrors({ password: "Your password is incorrect. Please try again." });
+      } else if (error.code === "auth/user-not-found") {
+        setErrors({ email: "No user found with this email." });
+      } else {
+        console.error("Authentication error:", error);
+        setErrors({ general: "Failed to connect to the database. Please try again later." });
+      }
+      setIsLoading(false);
     }
-  }
-};
+  };
+
 
   return (
     <View style={styles.container}>
@@ -138,9 +110,9 @@ export default function App({ navigation }) {
           />
         </View>
         <View style={styles.inputContainer}>
-          <Text style={styles.header}>Welcome Back !</Text>
+          <Text style={styles.header}>Welcome Back!</Text>
           <View style={styles.accountLoginContainer}>
-            <Text style={styles.smallerText}> Login to your account</Text>
+            <Text style={styles.smallerText}>Login to your account</Text>
             <View style={styles.iconContainer}>
               <Icon
                 name="google"
@@ -151,43 +123,67 @@ export default function App({ navigation }) {
               <Icon name="facebook" size={20} color="gray" />
             </View>
           </View>
+
+          {/* Email Input */}
           <TextInput
-            style={styles.input}
+            style={[styles.input, errors.email && styles.inputError]}
             placeholder="Email"
             placeholderTextColor="white"
             value={email}
             onChangeText={setEmail}
+            autoCompleteType="email" // Auto-complete email address on iOS (deprecated, use 'autoComplete' for new versions)
+            autoComplete="email" // 
+            textContentType="emailAddress"
+
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="white"
-            secureTextEntry={true}
-            value={password}
-            onChangeText={setPassword}
-          />
-          
+          {/* Display error message for email */}
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+
+          {/* Password Input */}
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={[styles.input, errors.password && styles.inputError]}
+              placeholder="Password"
+              placeholderTextColor="white"
+              secureTextEntry={!isPasswordVisible} // Toggles the visibility
+              value={password}
+              onChangeText={setPassword}
+              autoComplete="password"
+              textContentType="password"
+            />
+            <TouchableOpacity
+              onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+              style={styles.eyeIconContainer}
+            >
+              <Icon
+                name={isPasswordVisible ? "eye" : "eye-slash"}
+                size={20}
+                color="gray"
+              />
+            </TouchableOpacity>
+          </View>
+          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+
           <TouchableOpacity style={styles.button} onPress={handleOpenModal}>
             <Text style={styles.smallerButtonText}>I forgot my password</Text>
           </TouchableOpacity>
-          <ActionButton
-              handleOnPress={handleLogin}
-              isLoading={isLoading}
-              text="Sign In"
-            />
+          <ActionButton handleOnPress={handleLogin} isLoading={isLoading} text="Sign In" />
+
           <TouchableOpacity
             style={styles.button}
             onPress={() => navigation.navigate("Signup")}
           >
-            <Text style={styles.smallerButtonText}>
-              I don't have an account
-            </Text>
+            <Text style={styles.smallerButtonText}>I don't have an account</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Password Reset Modal */}
       <ForgetPassword isModalVisible={isModalVisible} handleCloseModal={handleCloseModal} />
     </View>
   );
+
+
 }
 
 const styles = StyleSheet.create({
@@ -232,7 +228,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
     color: "white",
-    
+
   },
   inputContainer: {
     flex: 1,
@@ -252,6 +248,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#fff",
     textDecorationColor: "white",
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+  },
+  eyeIconContainer: {
+    position: "absolute",
+    right: 10,
   },
   signInButton: {
     width: "100%",
@@ -282,4 +287,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'green',
     flex: 1
   },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    marginTop: -10, // Adjust based on layout
+    marginBottom: 10,
+  }
 });

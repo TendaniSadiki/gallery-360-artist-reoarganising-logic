@@ -21,6 +21,7 @@ import loader2 from "../../../assets/images/loader2.gif"; // this is the bad guy
 //import { useSelector } from "react-redux";
 import data from "./utils/data.js";
 import styles from "./styles.js";
+import { useFetchProfileData } from "../../../hooks/useFetchProfileData.jsx";
 
 const DashboardScreen = ({ navigation }) => {
   const profilePic = require("../../../assets/images/userImage.jpg"); // Replace with the actual path to the profile picture
@@ -30,7 +31,7 @@ const DashboardScreen = ({ navigation }) => {
     " make your first sale by adding artwork collections"
   );
   const [btnText, setBtnText] = useState("Add Artworks");
-  const { image, name, userData } = useProfileData();
+  const { image, name, userData } = useFetchProfileData();
 
   const data = {
     labels: ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],

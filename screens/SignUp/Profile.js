@@ -54,11 +54,14 @@ const SetupProfileScreen = ({ navigation }) => {
     // Profile Image Validation
     if (!image) {
       validationErrors.image = "Profile image is required";
+      console.log("Image is not defined");
     }
 
     // Date of Birth Validation
     if (!input.date) {
       validationErrors.dateOfBirth = "Please select your date of birth";
+      console.log("Date:", input.date);
+
     }
 
     setErrors(validationErrors);

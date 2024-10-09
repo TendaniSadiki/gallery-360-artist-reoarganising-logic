@@ -19,9 +19,9 @@ import {
 
 const SetupProfileScreen = ({ navigation, route }) => {
   const { userData } = route.params;
-  const useImage = { uri: userData.photoUrl };
+  const defaultImage = userData.photoUrl ? { uri: userData.photoUrl } : null;
   
-  const [sourceImage, setImage] = useState(useImage);
+  const [sourceImage, setImage] = useState(defaultImage); // Set default user image
   const [fullName, setFullName] = useState(userData.fullname || "");
   const [contactNumber, setContactNumber] = useState(userData.contactnumber || "");
   const [website, setWebsite] = useState(userData.websiteurl || "");
@@ -33,35 +33,52 @@ const SetupProfileScreen = ({ navigation, route }) => {
   const [modalIsVisible, setModalIsVisible] = useState(false);
   
   const { pickOneImage, imageUrl } = useImageFunctions();
+  
+  // Set selected image as the profile image
+  const handleImagePick = async () => {
+    await pickOneImage();
+    if (imageUrl) {
+      setImage({ uri: imageUrl });
+    }
+  };
+
   const handleOpenModal = () => setModalIsVisible(true);
   const handleCloseModal = () => setModalIsVisible(false);
 
   const user = FIREBASE_AUTH.currentUser;
   const docRef = doc(FIRESTORE_DB, "artists", user.uid);
 
-  const updateProfileData = () => {
-    updateDoc(docRef, {
-      fullname: fullName,
-      contactnumber: contactNumber,
-      websiteurl: website,
-      dateofbirth: dateOfBirth,
-      biography: bio,
-      photoUrl: imageUrl || userData.photoUrl,
-      facebook: facebook,
-      instagram: instagram,
-    })
-      .then(() => {
-        alert("Profile updated successfully");
-        navigation.popToTop();
-      })
-      .catch((error) => {
-        alert("Error updating profile: " + error.message);
-      });
+ const updateProfileData = () => {
+  // Build the update object
+  const updatePayload = {
+    fullname: fullName,
+    contactnumber: contactNumber,
+    websiteurl: website,
+    dateofbirth: dateOfBirth,
+    biography: bio,
+    facebook: facebook,
+    instagram: instagram,
   };
+
+  // Conditionally add `photoUrl` only if it exists
+  if (imageUrl || userData.imageUrl) {
+    updatePayload.imageUrl = imageUrl || userData.imageUrl;
+  }
+
+  updateDoc(docRef, updatePayload)
+    .then(() => {
+      alert("Profile updated successfully");
+      navigation.popToTop();
+    })
+    .catch((error) => {
+      alert("Error updating profile: " + error.message);
+    });
+};
+
 
   const handleSaveProfile = () => {
     console.log("Profile Data:");
-    console.log("Image:", imageUrl);
+    console.log("Image:", imageUrl || userData.photoUrl);
     console.log("Full Name:", fullName);
     console.log("Contact Number:", contactNumber);
     console.log("Website:", website);

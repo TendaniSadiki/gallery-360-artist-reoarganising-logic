@@ -16,7 +16,7 @@ import { sendEmailVerification } from "firebase/auth";
 
 const PaymentScreen = ({ navigation }) => {
   const auth = FIREBASE_AUTH;
-  
+
   const user = auth.currentUser;
 
   // Define state variables
@@ -44,10 +44,32 @@ const PaymentScreen = ({ navigation }) => {
     }
     if (!expiry) {
       errors.expiry = "Expiry date is required";
+    } else if (!/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(expiry)) {
+      errors.expiry = "Expiry date must be in MM/YY format";
+    } else {
+      const [month, year] = expiry.split("/").map(Number);
+      const currentYear = new Date().getFullYear() % 100; // Get last two digits of current year
+      const currentMonth = new Date().getMonth() + 1;
+
+      if (year < currentYear || (year === currentYear && month < currentMonth)) {
+        errors.expiry = "Expiry date cannot be in the past";
+      }
     }
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
+// Handle expiry date input
+const handleExpiryInput = (text) => {
+  // Remove any characters that are not digits
+  let formattedText = text.replace(/[^0-9]/g, "");
+
+  // Add the '/' after the second digit (MM part)
+  if (formattedText.length > 2) {
+    formattedText = `${formattedText.substring(0, 2)}/${formattedText.substring(2, 4)}`;
+  }
+
+  setExpiry(formattedText);  // Set the formatted value
+};
 
   // Write payment data to Firestore
   const writeUserData = async () => {
@@ -137,9 +159,11 @@ const PaymentScreen = ({ navigation }) => {
           placeholder="Expiry (MM/YY)"
           placeholderTextColor="white"
           value={expiry}
-          onChangeText={setExpiry}
+          onChangeText={(text) => handleExpiryInput(text)}  // Use the handler function
           keyboardType="numeric"
+          maxLength={5} // Limit the length to 5 (MM/YY)
         />
+
         {errors.expiry && <Text style={styles.errorMessage}>{errors.expiry}</Text>}
 
         {/* CVV Input */}

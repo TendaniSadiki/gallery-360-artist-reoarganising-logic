@@ -22,6 +22,7 @@ import styles from "./styles.js";
 import { useProfileData } from "../../../hooks/useProfilePic.jsx";
 //import uuid from "react-native-uuid";
 import DateCheck from "../../../components/DateCheck.jsx";
+import { useFetchProfileData } from "../../../hooks/useFetchProfileData.jsx";
 
 export default function ExhibitionScreen({ navigation }) {
   const [selectedOption, setSelectedOption] = useState("All");
@@ -31,7 +32,7 @@ export default function ExhibitionScreen({ navigation }) {
   const firebaseExhibitionLength = firebaseExhibition?.length;
   console.log("Exhibition Screen : ", firebaseExhibition);
 
-  const { image, name, userData } = useProfileData();
+  const { image, name, userData } = useFetchProfileData();
   const handleAddArtwork = () => {
     navigation.navigate("NewExhibition");
   };

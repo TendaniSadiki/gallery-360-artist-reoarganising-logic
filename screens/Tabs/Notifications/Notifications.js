@@ -25,10 +25,11 @@ import { setData } from "../../../features/loginDetails.js";
 //import { useSelector } from "react-redux";
 import { useFetchExhibition } from "../../../hooks/useFetchExhibition";
 import UseFetchUpcoming from "../../../hooks/UseFetchUpcoming";
+import { useFetchProfileData } from "../../../hooks/useFetchProfileData.jsx";
 const DashboardScreen = ({ navigation }) => {
 
   console.log('in notifications');
-  const { image, name, userData } = useProfileData();
+  const { image, name, userData } = useFetchProfileData();
 
   const [navStack, setNavStack] = useState("NewArtwork");
   const [desc, setDesc] = useState(

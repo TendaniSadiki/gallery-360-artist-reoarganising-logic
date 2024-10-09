@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  FlatList,
-  ScrollView,
-} from "react-native";
-import ProfilePic from "../../../components/ProfilePic.js"; // Ensure ProfilePic handles image and name props
+import { View, Text, Image, TouchableOpacity, FlatList, ScrollView } from "react-native";
+import ProfilePic from "../../../components/ProfilePic.js";
 import loader2 from "../../../assets/images/loader2.gif";
 import styles from "./styles.js";
-import { useFetchProfileData } from "../../../hooks/useFetchProfileData"; // Updated hook import
+import { useFetchProfileData } from "../../../hooks/useFetchProfileData";
 import { useFetchArtworks } from "../../../hooks/useFetchArtworks.jsx";
 import { useCollection } from "../../../hooks/useCollection.jsx";
 
@@ -18,70 +11,62 @@ const ArtworksScreen = ({ navigation }) => {
   const [menuItems, setMenuItems] = useState(["All"]);
   const [selectedOption, setSelectedOption] = useState("All");
 
-  // Fetch profile data using useFetchProfileData hook
-  const { name, image, userData } = useFetchProfileData(); 
+  const { name, image, userData } = useFetchProfileData();
   const { firebaseArtworks } = useFetchArtworks();
   const { collectionData } = useCollection();
-  console.log("firebaseArtworks:", firebaseArtworks); // Check the structure of the artwork data
+  console.log("Artwork Data new:", JSON.stringify(firebaseArtworks, null, 2));
 
-  console.log("Profile name:", name); // Debug to check if name is fetched properly
-
-  // Update menu items based on collection data
   useEffect(() => {
-    if (collectionData) {
+    if (collectionData?.length) {
       const menuItem = collectionData.map((item) => item.value);
-      const uniqueMenuItems = [...new Set(menuItem)];
-      setMenuItems(["All", ...uniqueMenuItems]); // Include "All" as the default option
+      setMenuItems(["All", ...new Set(menuItem)]);
     }
   }, [collectionData]);
 
-  // Function to handle adding artwork
   const handleAddArtwork = () => {
     navigation.navigate("NewArtwork");
   };
 
-  // Function to render the artwork list
-  const renderContent = () => {
-    // Filter artwork data based on the selected option (collection name)
-    const filteredArtworkData = firebaseArtworks?.filter((artwork) => {
-      if (selectedOption === "All") {
-        return true; // Show all artworks if "All" is selected
-      }
-      return artwork.collection?.name === selectedOption; // Match the selected collection name
-    });
-  
-    // Render the artwork list
-    const renderItem = ({ item }) => (
-      <View style={styles.card}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Artworks2", { item, image, name })}
-        >
+  const filteredArtworkData = firebaseArtworks?.filter((artwork) => {
+    return selectedOption === "All" || artwork.collection?.name === selectedOption;
+  });
+
+  // Log to check the structure of `filteredArtworkData`
+  console.log("Filtered Artwork Data:", filteredArtworkData);
+
+  const renderItem = ({ item }) => {
+    console.log({ item });
+    
+    if (!item) {
+      console.warn("Empty or undefined item:", item);
+      return null;
+    }
+    return (
+      <View style={[styles.card, { backgroundColor: '#f0f0f0', margin: 5 }]}>
+                <TouchableOpacity onPress={() => navigation.navigate("Artworks2", { item, image, name })} >
+
+
+        <Text>Hi there</Text>
+        </TouchableOpacity>
+
+      </View>
+    )
+    return (
+      <View style={[styles.card, { backgroundColor: '#f0f0f0', margin: 5 }]}>
+        <TouchableOpacity onPress={() => navigation.navigate("Artworks2", { item, image, name })}>
           <View style={styles.cardContent}>
             <Text style={styles.cardTitle}>{item.title || "Untitled Artwork"}</Text>
-            <Text style={styles.cardText}>Type: {item.artworkType?.join(', ')}</Text>
-            <Text style={styles.cardText}>Year: {item.year}</Text>
-            <Text style={styles.cardText}>Price: {item.price} USD</Text>
-            <Text style={styles.cardText}>Condition: {item.condition}</Text>
-            <Text style={styles.cardText}>Availability: {item.availability?.join(', ')}</Text>
-            <Text style={styles.cardText}>Collection: {item.collection?.name}</Text>
+            <Text style={styles.cardText}>Type: {item.artworkType?.join(", ") || "Unknown"}</Text>
+            <Text style={styles.cardText}>Year: {item.year || "N/A"}</Text>
+            <Text style={styles.cardText}>Price: {item.price ? `${item.price} USD` : "Not Specified"}</Text>
+            <Text style={styles.cardText}>Condition: {item.condition || "N/A"}</Text>
+            <Text style={styles.cardText}>Availability: {item.availability?.join(", ") || "N/A"}</Text>
+            <Text style={styles.cardText}>Collection: {item.collection?.name || "None"}</Text>
           </View>
         </TouchableOpacity>
       </View>
     );
-  
-    return (
-      <View style={styles.container}>
-        <FlatList
-          data={filteredArtworkData}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.key} // Ensure `key` is used to identify each artwork
-          numColumns={2}
-          columnWrapperStyle={styles.columnWrapper}
-        />
-      </View>
-    );
   };
-  
 
   return userData === null ? (
     <View style={styles.container}>
@@ -89,45 +74,43 @@ const ArtworksScreen = ({ navigation }) => {
     </View>
   ) : (
     <View style={styles.container}>
-      {/* Display the ProfilePic with name and image */}
-      <ProfilePic data={{ name, image, navigation }} /> 
+      <ProfilePic data={{ name, image, navigation }} />
       <View style={styles.newArtworkContainer}>
         <Text style={styles.welcomeHeader}>Artworks</Text>
-        <TouchableOpacity
-          style={styles.signInButton}
-          onPress={handleAddArtwork}
-        >
+        <TouchableOpacity style={styles.signInButton} onPress={handleAddArtwork}>
           <Text style={styles.buttonText}>NEW ARTWORK</Text>
         </TouchableOpacity>
       </View>
       <View style={{ height: 50 }}>
-        <ScrollView
-          horizontal
-          contentContainerStyle={styles.artworksMenu}
-          style={styles.scrollView}
-        >
-          {menuItems.map((menuItem, index) => (
+        <ScrollView horizontal contentContainerStyle={styles.artworksMenu} style={styles.scrollView}>
+          {menuItems.map((menuItem) => (
             <TouchableOpacity
-              key={index}
-              style={[
-                styles.menuItem,
-                selectedOption === menuItem && styles.activeMenuItem,
-              ]}
+              key={menuItem}
+              style={[styles.menuItem, selectedOption === menuItem && styles.activeMenuItem]}
               onPress={() => setSelectedOption(menuItem)}
             >
-              <Text
-                style={[
-                  styles.menuText,
-                  selectedOption === menuItem && styles.activeMenuText,
-                ]}
-              >
+              <Text style={[styles.menuText, selectedOption === menuItem && styles.activeMenuText]}>
                 {menuItem}
               </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
-      {renderContent()}
+      {/* Render the FlatList with debug checks */}
+
+
+
+      {filteredArtworkData?.length > 0 ? (
+        <FlatList
+          data={filteredArtworkData}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.uid || item.key || Math.random().toString()}
+          numColumns={2}
+          columnWrapperStyle={styles.columnWrapper}
+        />
+      ) : (
+        <Text style={{ textAlign: "center", marginTop: 20, color: "white" }}>No Artworks Available</Text>
+      )}
     </View>
   );
 };

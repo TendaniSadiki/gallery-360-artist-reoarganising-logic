@@ -31,11 +31,10 @@ export default function App({ navigation }) {
   }
 
   const validateForm = () => {
-    console.log("validateForm is hit");
     let errors = {};
     if (email.trim() === "") {
       errors.email = "Please enter a valid email";
-    } else if (!/\S+@\S.\S{2,}/.test(email.replace(/ /g, ""))) {
+    } else if (!/\S+@\S+\.\S{2,}/.test(email.replace(/ /g, ""))) {
       errors.email = "Please enter a valid email.";
     }
     if (
@@ -45,7 +44,7 @@ export default function App({ navigation }) {
       password.search(/[\d]/) < 0
     ) {
       errors.password =
-        "Password must be at least 8 characters long, containing at least one uppercase letter and one lowercase letter.";
+        "Password must be at least 8 characters long, containing at least one uppercase letter, one lowercase letter, and a number.";
     }
 
     setErrors(errors);
@@ -53,34 +52,34 @@ export default function App({ navigation }) {
   };
 
   const handleSignUp = async () => {
-    // Validate the form before submiting it
     setIsLoading(true);
     if (validateForm()) {
-      console.log({ validateForm: validateForm(), email: email, password: password});
-      // return
       try {
-        
-        const response = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
+        const response = await createUserWithEmailAndPassword(auth, email, password);
         const user = response.user;
-        // console.log("Registered with:", user.email);
         setIsLoading(false);
-        
+
+        // Navigate to Profile page on successful registration
         navigation.navigate("Profile");
         setEmail("");
         setPassword("");
         setErrors({});
       } catch (error) {
-        console.log(error);
-        alert("Please Enter Your Email And Password");
+        console.log("Sign-up error:", error);
+        setIsLoading(false);
+
+        // Handle Firebase's email already in use error
+        if (error.code === "auth/email-already-in-use") {
+          setErrors({ ...errors, email: "This email is already in use. Please try another one." });
+        } else {
+          alert("An error occurred during sign-up. Please try again.");
+        }
       }
     } else {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -88,6 +87,7 @@ export default function App({ navigation }) {
       }
     });
 
+    
     
     return () => unsubscribe();
   }, [navigation]);
