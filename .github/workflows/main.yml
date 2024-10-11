@@ -28,9 +28,8 @@ jobs:
 
       - name: Authenticate with Expo
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}  # Set the EXPO_TOKEN as an environment variable
-        run: |
-          echo $EXPO_TOKEN | eas login --username ${{ secrets.EXPO_USERNAME }} --password ${{ secrets.EXPO_PASSWORD }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}  # Ensure your EXPO_TOKEN is set in GitHub Secrets
+        run: eas login --token $EXPO_TOKEN  # Authenticate using the EXPO_TOKEN
 
       - name: Build project
         run: eas build -p android
