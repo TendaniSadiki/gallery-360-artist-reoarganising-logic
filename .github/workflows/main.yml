@@ -23,11 +23,11 @@ jobs:
       - name: Install project dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Install EAS CLI
-        run: npm install -g eas-cli  # Install the EAS CLI
-
       - name: Authenticate with Expo
-        run: eas login --token ${{ secrets.EXPO_TOKEN }}  # Authenticate using the EXPO_TOKEN
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}  # Set the EXPO_TOKEN as an environment variable
+        run: |
+          echo $EXPO_TOKEN | eas login --username ${{ secrets.EXPO_USERNAME }} --password ${{ secrets.EXPO_PASSWORD }}
 
       - name: Build project
         run: eas build -p android
@@ -62,7 +62,7 @@ jobs:
           curl -o app.apk "$APK_URL"
 
       - name: Upload APK as an artifact
-        uses: actions/upload-artifact@v3  # Updated to v3
+        uses: actions/upload-artifact@v3
         with:
           name: apk-file
           path: app.apk
