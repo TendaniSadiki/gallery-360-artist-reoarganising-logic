@@ -23,6 +23,9 @@ jobs:
       - name: Install project dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Install EAS CLI
+        run: npm install -g eas-cli  # Install the EAS CLI
+
       - name: Authenticate with Expo
         run: eas login --token ${{ secrets.EXPO_TOKEN }}  # Authenticate using the EXPO_TOKEN
 
