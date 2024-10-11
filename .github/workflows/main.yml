@@ -65,7 +65,7 @@ jobs:
           curl -o app.apk "$APK_URL"
 
       - name: Upload APK as an artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3  # Updated to v3
         with:
           name: apk-file
           path: app.apk
