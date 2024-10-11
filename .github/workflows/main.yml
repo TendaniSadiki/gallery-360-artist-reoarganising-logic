@@ -23,6 +23,9 @@ jobs:
       - name: Install project dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Install EAS CLI
+        run: npm install -g eas-cli  # Install EAS CLI globally
+
       - name: Authenticate with Expo
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}  # Set the EXPO_TOKEN as an environment variable
