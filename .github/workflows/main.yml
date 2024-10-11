@@ -23,8 +23,11 @@ jobs:
       - name: Install project dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Authenticate with Expo
+        run: eas login --token ${{ secrets.EXPO_TOKEN }}  # Authenticate using the EXPO_TOKEN
+
       - name: Build project
-        run: npm run build
+        run: eas build -p android
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
@@ -46,11 +49,6 @@ jobs:
 
           # Deploy to Firebase
           firebase hosting:channel:deploy "$CHANNEL" --token "$FIREBASE_TOKEN"
-
-      - name: Build APK for Android
-        run: |
-          npx expo login --username ${{ secrets.EXPO_USERNAME }} --password ${{ secrets.EXPO_PASSWORD }}
-          npx expo build:android --no-wait --type apk
 
       - name: Wait for APK build to complete
         run: npx expo build:status
