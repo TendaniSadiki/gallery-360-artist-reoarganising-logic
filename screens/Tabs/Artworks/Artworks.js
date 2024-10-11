@@ -36,36 +36,26 @@ const ArtworksScreen = ({ navigation }) => {
 
   const renderItem = ({ item }) => {
     console.log({ item });
-    
+
     if (!item) {
       console.warn("Empty or undefined item:", item);
       return null;
     }
     return (
       <View style={[styles.card, { backgroundColor: '#f0f0f0', margin: 5 }]}>
-                <TouchableOpacity onPress={() => navigation.navigate("Artworks2", { item, image, name })} >
-
-
-        <Text>Hi there</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Artworks2", { item, image, name })} >
+          <Text style={styles.cardTitle}>{item.title || "Untitled Artwork"}</Text>
+          <Text style={styles.cardText}>Type: {item.artworkType?.join(", ") || "Unknown"}</Text>
+          <Text style={styles.cardText}>Year: {item.year || "N/A"}</Text>
+          <Text style={styles.cardText}>Price: {item.price ? `R ${item.price} ` : "Not Specified"}</Text>
+          <Text style={styles.cardText}>Condition: {item.condition || "N/A"}</Text>
+          <Text style={styles.cardText}>Availability: {item.availability?.join(", ") || "N/A"}</Text>
+          <Text style={styles.cardText}>Collection: {item.collection?.name || "None"}</Text>
         </TouchableOpacity>
 
       </View>
     )
-    return (
-      <View style={[styles.card, { backgroundColor: '#f0f0f0', margin: 5 }]}>
-        <TouchableOpacity onPress={() => navigation.navigate("Artworks2", { item, image, name })}>
-          <View style={styles.cardContent}>
-            <Text style={styles.cardTitle}>{item.title || "Untitled Artwork"}</Text>
-            <Text style={styles.cardText}>Type: {item.artworkType?.join(", ") || "Unknown"}</Text>
-            <Text style={styles.cardText}>Year: {item.year || "N/A"}</Text>
-            <Text style={styles.cardText}>Price: {item.price ? `${item.price} USD` : "Not Specified"}</Text>
-            <Text style={styles.cardText}>Condition: {item.condition || "N/A"}</Text>
-            <Text style={styles.cardText}>Availability: {item.availability?.join(", ") || "N/A"}</Text>
-            <Text style={styles.cardText}>Collection: {item.collection?.name || "None"}</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-    );
+
   };
 
   return userData === null ? (
@@ -97,9 +87,6 @@ const ArtworksScreen = ({ navigation }) => {
         </ScrollView>
       </View>
       {/* Render the FlatList with debug checks */}
-
-
-
       {filteredArtworkData?.length > 0 ? (
         <FlatList
           data={filteredArtworkData}

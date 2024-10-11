@@ -60,7 +60,7 @@ const ExhibitionScreen = ({ navigation, route }) => {
           />
         </View>
         <Text style={styles.title}>EXHIBITION CONTENT</Text>
-
+            
         <Carousel
           data={images}
           renderItem={({ item }) => (
@@ -74,6 +74,7 @@ const ExhibitionScreen = ({ navigation, route }) => {
           <Text style={styles.input}>{address}</Text>
           <Text style={styles.input}>{contactNumber}</Text>
           <Text style={styles.input}>{email}</Text>
+          
         </View>
 
         <Text style={styles.description}>{desc}</Text>

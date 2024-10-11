@@ -14,6 +14,7 @@ import { useFetchArtworks } from "../../hooks/useFetchArtworks";
 import { useCollection } from "../../hooks/useCollection";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import FIREBASE_AUTH, { FIRESTORE_DB } from "../../firebase/firebase.config";
 
 const ArtworksScreen = ({ navigation }) => {
   console.log('in exhibition collection');

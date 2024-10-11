@@ -1,0 +1,71 @@
+name: GALLERY-360-ARTIST-REORGANISING-LOGIC
+
+on:
+  push:
+    branches:
+      - main
+      - developer
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '22.9.0'
+
+      - name: Install project dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build project
+        run: npm run build
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Determine Firebase Hosting Channel and Deploy
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            CHANNEL="main"
+          elif [ "${{ github.ref }}" = "refs/heads/developer" ]; then
+            CHANNEL="developer"
+          elif [ "${{ github.ref }}" = "refs/heads/staging" ]; then
+            CHANNEL="staging"
+          else
+            echo "Branch not set up for deployment."
+            exit 0
+          fi
+
+          # Deploy to the specified Firebase Hosting channel
+          firebase hosting:channel:deploy "$CHANNEL" --token "$FIREBASE_TOKEN"
+
+      - name: Deployment status
+        run: echo "Deployment to $CHANNEL completed successfully."
+
+      # New Step: Build APK for Android
+      - name: Build APK for Android
+        run: |
+          npx expo login --username ${{ secrets.EXPO_USERNAME }} --password ${{ secrets.EXPO_PASSWORD }}
+          npx expo build:android --no-wait --type apk
+
+      - name: Wait for APK build to complete
+        run: npx expo build:status
+
+      - name: Download APK
+        run: |
+          APK_URL=$(npx expo url:apk)
+          curl -o app.apk "$APK_URL"
+
+      - name: Upload APK as an artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: apk-file
+          path: app.apk
