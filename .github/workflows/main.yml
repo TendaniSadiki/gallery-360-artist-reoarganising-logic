@@ -29,45 +29,32 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Build project
+      # Build the web version of the Expo app
+      - name: Build Expo Web App
+        run: expo export:web
+
+      # Deploy to Expo Hosting
+      - name: Deploy to Expo Web Hosting
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: expo publish --non-interactive
+
+      - name: Build Android APK
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas build -p android --non-interactive --no-wait --profile production
 
-      - name: Install Firebase CLI
-        run: npm install -g firebase-tools
-
-      - name: Check current directory
-        run: |
-          pwd
-          ls -la
-
-      - name: Determine Firebase Hosting Channel and Deploy
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-        run: |
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            CHANNEL="main"
-          elif [ "${{ github.ref }}" = "refs/heads/developer" ]; then
-            CHANNEL="developer"
-          elif [ "${{ github.ref }}" = "refs/heads/staging" ]; then
-            CHANNEL="staging"
-          else
-            echo "Branch not set up for deployment."
-            exit 0
-          fi
-
-          # Deploy to Firebase
-          firebase hosting:channel:deploy "$CHANNEL" --token "$FIREBASE_TOKEN"
-
+      # Wait for the APK build to complete
       - name: Wait for APK build to complete
         run: npx expo build:status
 
+      # Download the APK
       - name: Download APK
         run: |
           APK_URL=$(npx expo url:apk)
           curl -o app.apk "$APK_URL"
 
+      # Upload APK as an artifact
       - name: Upload APK as an artifact
         uses: actions/upload-artifact@v3
         with:
