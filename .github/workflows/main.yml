@@ -18,14 +18,18 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '22.x'
+          node-version: '16.x'  # Use a compatible Node.js version for SDK 49 and expo-cli
 
       - name: Install project dependencies
         run: npm install --legacy-peer-deps
 
-      # Install Expo CLI
+      # Install Expo CLI (supports SDK 49 and expo publish)
       - name: Install Expo CLI
         run: npm install -g expo-cli
+
+      # Install expo-updates (required for expo publish with SDK 49)
+      - name: Install expo-updates
+        run: npm install expo-updates
 
       - name: Setup Expo and EAS
         uses: expo/expo-github-action@v8
@@ -33,12 +37,8 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      # Build the web version of the Expo app
-      - name: Build Expo Web App
-        run: expo export:web
-
-      # Deploy to Expo Web Hosting
-      - name: Deploy to Expo Web Hosting
+      # Use expo publish for SDK 49
+      - name: Publish Expo App (SDK 49)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: expo publish --non-interactive
