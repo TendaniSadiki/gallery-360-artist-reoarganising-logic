@@ -42,7 +42,7 @@ jobs:
       - name: Publish Expo App (EAS Update)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas update --non-interactive
+        run: eas update --branch main --message "Automated update via CI/CD" --non-interactive
 
       # Build Android APK
       - name: Build Android APK
