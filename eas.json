@@ -10,7 +10,13 @@
     "preview": {
       "distribution": "internal"
     },
-    "production": {}
+    "production": {
+      "env": {
+        "EXPO_NO_DEV": "true",
+        "EXPO_USE_NPM_INSTALL": "true",
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"  // Add this line to bypass peer dependency conflicts
+      }
+    }
   },
   "submit": {
     "production": {}
