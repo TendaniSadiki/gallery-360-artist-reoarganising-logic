@@ -29,7 +29,7 @@ jobs:
 
       # Install expo-updates (required for EAS Update)
       - name: Install expo-updates
-        run: npm install expo-updates
+        run: npm install expo-updates --legacy-peer-deps
 
       # Setup Expo and EAS
       - name: Setup Expo and EAS
