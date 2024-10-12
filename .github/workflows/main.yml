@@ -23,6 +23,10 @@ jobs:
       - name: Install project dependencies
         run: npm install --legacy-peer-deps
 
+      # Install Expo CLI
+      - name: Install Expo CLI
+        run: npm install -g expo-cli
+
       - name: Setup Expo and EAS
         uses: expo/expo-github-action@v8
         with:
@@ -33,7 +37,7 @@ jobs:
       - name: Build Expo Web App
         run: expo export:web
 
-      # Deploy to Expo Hosting
+      # Deploy to Expo Web Hosting
       - name: Deploy to Expo Web Hosting
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
