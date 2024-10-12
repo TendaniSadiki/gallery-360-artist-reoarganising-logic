@@ -21,46 +21,38 @@ jobs:
           node-version: '16.x'  # Compatible Node.js version for Expo SDK 49
 
       - name: Install project dependencies
-        run: npm install --legacy-peer-deps  # Bypass peer dependency conflicts
+        run: npm install --legacy-peer-deps
 
-      # Install Expo CLI (supports SDK 49)
       - name: Install Expo CLI
         run: npm install -g expo-cli
 
-      # Install expo-updates (required for EAS Update)
       - name: Install expo-updates
         run: npm install expo-updates --legacy-peer-deps
 
-      # Setup Expo and EAS
       - name: Setup Expo and EAS
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      # Use EAS Update to publish updates
       - name: Publish Expo App (EAS Update)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas update --branch main --message "Automated update via CI/CD" --non-interactive
 
-      # Build Android APK
       - name: Build Android APK
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas build -p android --non-interactive --no-wait --profile production
 
-      # Wait for APK build to complete
       - name: Wait for APK build to complete
-        run: npx expo build:status
+        run: eas build:list --status=in-progress --non-interactive
 
-      # Download the APK
       - name: Download APK
         run: |
-          APK_URL=$(npx expo url:apk)
+          APK_URL=$(eas build:list --status=finished --non-interactive --json | jq -r '.[0].artifacts.buildUrl')
           curl -o app.apk "$APK_URL"
 
-      # Upload APK as an artifact
       - name: Upload APK as an artifact
         uses: actions/upload-artifact@v3
         with:
