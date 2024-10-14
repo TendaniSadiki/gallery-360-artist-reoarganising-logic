@@ -59,23 +59,3 @@ jobs:
         with:
           name: apk-file
           path: app.apk
-
-      # iOS IPA Build
-      - name: Build iOS IPA
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build -p ios --non-interactive --wait --profile production
-
-      - name: Download IPA
-        run: |
-          IPA_URL=$(eas build:list --status=finished --non-interactive --json | jq -r '.[0].artifacts.buildUrl')
-          if [ -z "$IPA_URL" ]; then
-            echo "Failed to fetch IPA URL" && exit 1
-          fi
-          curl -o app.ipa "$IPA_URL"
-
-      - name: Upload IPA as an artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ipa-file
-          path: app.ipa
