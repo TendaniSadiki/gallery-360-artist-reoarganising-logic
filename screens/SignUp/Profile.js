@@ -21,7 +21,10 @@ const SetupProfileScreen = ({ navigation }) => {
   const auth = FIREBASE_AUTH;
   const [fullName, setFullName] = useState("");
   const [contactNumber, setContactNumber] = useState("");
-  const [location, setLocation] = useState("");
+  const [streetAddress, setStreetAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [province, setProvince] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [website, setWebsite] = useState("");
   const [bio, setBio] = useState("");
   const [modalIsVisible, setModalIsVisible] = useState(false);
@@ -46,6 +49,19 @@ const SetupProfileScreen = ({ navigation }) => {
       validationErrors.contactNumber = "Please enter a valid contact number (10 digits)";
     }
 
+    // Physical Address Validation
+    if (!streetAddress.trim()) {
+      validationErrors.streetAddress = "Street address is required";
+    }
+    if (!city.trim()) {
+      validationErrors.city = "City or suburb is required";
+    }
+    if (!province.trim()) {
+      validationErrors.province = "Province is required";
+    }
+    if (!/^\d{4}$/.test(postalCode)) {
+      validationErrors.postalCode = "Please enter a valid 4-digit postal code";
+    }
     // Website URL Validation
     if (website && !/^(http|https):\/\/[^\s]+/.test(website)) {
       validationErrors.website = "Please enter a valid website URL (starting with http or https)";
@@ -80,7 +96,12 @@ const SetupProfileScreen = ({ navigation }) => {
           const userData = {
             fullname: fullName,
             contactnumber: contactNumber,
-            location: location,
+            address: {
+              street: streetAddress,
+              city: city,
+              province: province,
+              postalCode: postalCode,
+            },
             websiteurl: website,
             dateofbirth: input.date ? input.date.toLocaleDateString() : "",
             biography: bio,
@@ -208,16 +229,54 @@ const SetupProfileScreen = ({ navigation }) => {
           />
           {errors.contactNumber && <Text style={styles.errorMessage}>{errors.contactNumber}</Text>}
           <TextInput
-            style={styles.input}
-            placeholder="LOCATION"
-            placeholderTextColor="white"
-            value={location}
-            onChangeText={(text) => {
-              setErrors({});
-              setLocation(text);
-            }}
-          />
-          {errors.location && <Text style={styles.errorMessage}>{errors.location}</Text>}
+          style={styles.input}
+          placeholder="STREET ADDRESS"
+          placeholderTextColor="white"
+          value={streetAddress}
+          onChangeText={(text) => {
+            setErrors({});
+            setStreetAddress(text);
+          }}
+        />
+        {errors.streetAddress && <Text style={styles.errorMessage}>{errors.streetAddress}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="CITY / SUBURB"
+          placeholderTextColor="white"
+          value={city}
+          onChangeText={(text) => {
+            setErrors({});
+            setCity(text);
+          }}
+        />
+        {errors.city && <Text style={styles.errorMessage}>{errors.city}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="PROVINCE"
+          placeholderTextColor="white"
+          value={province}
+          onChangeText={(text) => {
+            setErrors({});
+            setProvince(text);
+          }}
+        />
+        {errors.province && <Text style={styles.errorMessage}>{errors.province}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="POSTAL CODE"
+          placeholderTextColor="white"
+          value={postalCode}
+          onChangeText={(text) => {
+            setErrors({});
+            setPostalCode(text);
+          }}
+          keyboardType="numeric"
+        />
+        {errors.postalCode && <Text style={styles.errorMessage}>{errors.postalCode}</Text>}
+
           <TextInput
             style={styles.input}
             placeholder="WEBSITE"

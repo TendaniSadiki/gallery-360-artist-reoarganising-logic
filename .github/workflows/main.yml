@@ -40,6 +40,7 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas update --branch main --message "Automated update via CI/CD" --non-interactive
 
+      # Android APK Build
       - name: Build Android APK
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -58,3 +59,23 @@ jobs:
         with:
           name: apk-file
           path: app.apk
+
+      # iOS .ipa Build
+      - name: Build iOS .ipa
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build -p ios --non-interactive --no-wait --profile production
+
+      - name: Wait for .ipa build to complete
+        run: eas build:list --status=in-progress --non-interactive
+
+      - name: Download .ipa
+        run: |
+          IPA_URL=$(eas build:list --status=finished --non-interactive --json | jq -r '.[0].artifacts.buildUrl')
+          curl -o app.ipa "$IPA_URL"
+
+      - name: Upload .ipa as an artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ipa-file
+          path: app.ipa
