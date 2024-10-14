@@ -15,7 +15,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gallery360.artist"  // Add this line for iOS bundle identifier
     },
     "android": {
       "adaptiveIcon": {

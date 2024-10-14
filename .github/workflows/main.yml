@@ -44,14 +44,14 @@ jobs:
       - name: Build Android APK
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build -p android --non-interactive --no-wait --profile production
-
-      - name: Wait for APK build to complete
-        run: eas build:list --status=in-progress --non-interactive
+        run: eas build -p android --non-interactive --wait --profile production
 
       - name: Download APK
         run: |
           APK_URL=$(eas build:list --status=finished --non-interactive --json | jq -r '.[0].artifacts.buildUrl')
+          if [ -z "$APK_URL" ]; then
+            echo "Failed to fetch APK URL" && exit 1
+          fi
           curl -o app.apk "$APK_URL"
 
       - name: Upload APK as an artifact
@@ -60,18 +60,18 @@ jobs:
           name: apk-file
           path: app.apk
 
-      # iOS .ipa Build
+      # iOS IPA Build
       - name: Build iOS IPA
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build -p ios --non-interactive --no-wait --profile production
-
-      - name: Wait for iOS build to complete
-        run: eas build:list --status=in-progress --non-interactive
+        run: eas build -p ios --non-interactive --wait --profile production
 
       - name: Download IPA
         run: |
           IPA_URL=$(eas build:list --status=finished --non-interactive --json | jq -r '.[0].artifacts.buildUrl')
+          if [ -z "$IPA_URL" ]; then
+            echo "Failed to fetch IPA URL" && exit 1
+          fi
           curl -o app.ipa "$IPA_URL"
 
       - name: Upload IPA as an artifact
