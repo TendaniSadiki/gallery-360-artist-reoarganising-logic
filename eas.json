@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 5.2.0"
+    "version": ">= 5.2.0",
+    "appVersionSource": "remote"  // Add this line to avoid the warning about cli.appVersionSource
   },
   "build": {
     "development": {
@@ -14,7 +15,7 @@
       "env": {
         "EXPO_NO_DEV": "true",
         "EXPO_USE_NPM_INSTALL": "true",
-        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"  // Add this line to bypass peer dependency conflicts
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       }
     }
   },
