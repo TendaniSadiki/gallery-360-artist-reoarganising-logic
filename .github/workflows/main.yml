@@ -61,20 +61,20 @@ jobs:
           path: app.apk
 
       # iOS .ipa Build
-      - name: Build iOS .ipa
+      - name: Build iOS IPA
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas build -p ios --non-interactive --no-wait --profile production
 
-      - name: Wait for .ipa build to complete
+      - name: Wait for iOS build to complete
         run: eas build:list --status=in-progress --non-interactive
 
-      - name: Download .ipa
+      - name: Download IPA
         run: |
           IPA_URL=$(eas build:list --status=finished --non-interactive --json | jq -r '.[0].artifacts.buildUrl')
           curl -o app.ipa "$IPA_URL"
 
-      - name: Upload .ipa as an artifact
+      - name: Upload IPA as an artifact
         uses: actions/upload-artifact@v3
         with:
           name: ipa-file
