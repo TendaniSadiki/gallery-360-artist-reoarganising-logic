@@ -35,16 +35,11 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Publish Expo App (EAS Update)
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas update --branch main --message "Automated update via CI/CD" --non-interactive
-
-      # Android APK Build
+      # Android APK Build using the manual command
       - name: Build Android APK
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build -p android --non-interactive --wait --profile production
+        run: eas build -p android --profile production --non-interactive
 
       - name: Download APK
         run: |
