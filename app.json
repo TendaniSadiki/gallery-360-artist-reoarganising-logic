@@ -3,6 +3,7 @@
     "name": "Gallery-360",
     "slug": "Gallery-360",
     "version": "1.0.0",
+    "runtimeVersion": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

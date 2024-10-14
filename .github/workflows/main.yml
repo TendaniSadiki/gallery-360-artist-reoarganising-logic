@@ -40,3 +40,7 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas build -p android --profile production --non-interactive --wait
+
+      - name: Display Build Logs
+        if: failure()
+        run: cat /home/expo/workingdir/build/logs/EASBuildWorker.log
