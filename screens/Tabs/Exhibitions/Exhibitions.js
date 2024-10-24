@@ -6,49 +6,90 @@ import {
   TouchableOpacity,
   ScrollView,
   FlatList,
+  Alert,
 } from "react-native";
+import moment from "moment";
 import { useFetchExhibition } from "../../../hooks/useFetchExhibition.jsx";
 import { useFetchProfileData } from "../../../hooks/useFetchProfileData.jsx";
 import loader2 from "../../../assets/images/loader2.gif";
 import styles from "./styles.js";
 import ProfilePic from "../../../components/ProfilePic.js";
+import { deleteDoc, doc } from "firebase/firestore";
+import { FIRESTORE_DB } from "../../../firebase/firebase.config";
+import Icon from "react-native-vector-icons/MaterialIcons"; // Importing the icon library
 
 export default function ExhibitionScreen({ navigation }) {
   const [selectedOption, setSelectedOption] = useState("All");
-  const { exhibionData, firebaseExhibition } = useFetchExhibition();
-  const firebaseExhibitionLength = firebaseExhibition?.length;
+  const { exhibitionData, firebaseExhibition, isLoading } = useFetchExhibition(); 
   const { image, name } = useFetchProfileData();
 
   const handleAddArtwork = () => {
     navigation.navigate("NewExhibition");
   };
 
-  // Loader component
+  const convertFirestoreTimestampToMoment = (timestamp) => {
+    if (timestamp?.seconds) {
+      return moment(timestamp.seconds * 1000);
+    }
+    return null;
+  };
+
   const Imageloader = () => (
     <View style={styles.loaderContainer}>
       <Image source={loader2} />
     </View>
   );
 
-  // Filter exhibitions based on selected option
   const filteredExhibitions = () => {
+    if (!firebaseExhibition) return [];
+
     if (selectedOption === "All") {
       return firebaseExhibition;
     } else if (selectedOption === "UPCOMING") {
-      // Assuming exhibitions have a date field that can be used to filter
-      return firebaseExhibition.filter(
-        (exhibition) => new Date(exhibition?.date?.fromDate) > new Date()
+      return firebaseExhibition.filter((exhibition) =>
+        convertFirestoreTimestampToMoment(exhibition?.date?.fromDate).isAfter(moment())
       );
     } else if (selectedOption === "PAST") {
-      return firebaseExhibition.filter(
-        (exhibition) => new Date(exhibition?.date?.toDate) < new Date()
+      return firebaseExhibition.filter((exhibition) =>
+        convertFirestoreTimestampToMoment(exhibition?.date?.toDate).isBefore(moment())
       );
     } else if (selectedOption === "DRAFTS") {
       return firebaseExhibition.filter((exhibition) => exhibition?.isDraft);
     }
   };
 
-  // Render each exhibition item
+  const filteredData = filteredExhibitions();
+// Function to delete an exhibition by its ID from Firestore
+const deleteExhibitionById = async (exhibitionId) => {
+  try {
+    const docRef = doc(FIRESTORE_DB, "exhibition", exhibitionId);
+    await deleteDoc(docRef);
+    console.log("Exhibition deleted successfully");
+  } catch (error) {
+    console.error("Error deleting exhibition:", error);
+  }
+};
+
+  // Function to handle deletion of an exhibition
+  const handleDeleteExhibition = (exhibitionId) => {
+    Alert.alert(
+      "Delete Exhibition",
+      "Are you sure you want to delete this exhibition?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: () => deleteExhibitionById(exhibitionId), // Now it uses the defined function
+          style: "destructive",
+        },
+      ]
+    );
+  };
+  
+
   const renderItem = ({ item }) => (
     <View style={styles.card} key={item.key}>
       <TouchableOpacity
@@ -57,7 +98,7 @@ export default function ExhibitionScreen({ navigation }) {
         }
       >
         <Image
-          source={{ uri: item?.imgUrls[0]?.imgUrl }} // Assuming you have an image URL in imgUrls[0]
+          source={{ uri: item?.imgUrls[0]?.imgUrl }}
           style={styles.cardImage}
         />
         <View style={styles.cardInfoContainer}>
@@ -67,19 +108,21 @@ export default function ExhibitionScreen({ navigation }) {
             {item.desc.slice(0, 160)}
             {item.desc.length > 160 ? "..." : ""}
           </Text>
+          {/* Bin icon for deleting the exhibition */}
+          <TouchableOpacity onPress={() => handleDeleteExhibition(item.key)} style={styles.deleteIconContainer}>
+            <Icon name="delete" size={24} color="red" />
+          </TouchableOpacity>
         </View>
       </TouchableOpacity>
     </View>
   );
 
-  // Main rendering logic for exhibitions
   const exhibitionItem = () => {
-    const filteredData = filteredExhibitions();
     return (
       <View style={styles.container}>
         <FlatList
-          data={filteredData} // List of exhibitions after filtering
-          renderItem={renderItem} // Render each exhibition item
+          data={filteredData}
+          renderItem={renderItem}
           keyExtractor={(item) => item.key}
           ListEmptyComponent={() => (
             <View style={styles.noDataContainer}>
@@ -182,7 +225,7 @@ export default function ExhibitionScreen({ navigation }) {
         </ScrollView>
       </View>
 
-      {firebaseExhibitionLength > 0 ? exhibitionItem() : Imageloader()}
+      {isLoading ? Imageloader() : exhibitionItem()}
     </View>
   );
 }
