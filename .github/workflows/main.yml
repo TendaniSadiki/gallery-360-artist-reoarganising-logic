@@ -12,23 +12,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # Install Node.js
       - name: Install Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '18.x'  # Compatible Node.js version for Expo SDK 49
+          cache: 'npm'
 
+      # Install project dependencies
       - name: Install project dependencies
         run: npm install --legacy-peer-deps
 
+      # Cache dependencies
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-npm-cache-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-cache-
+
+      # Install Expo CLI
       - name: Install Expo CLI
-        run: npm install -g expo-cli --force
+        run: npm install -g expo-cli
 
+      # Install EAS CLI
       - name: Install EAS CLI
-        run: npm install -g eas-cli --force
+        run: npm install -g eas-cli
 
+      # Setup Expo and EAS
       - name: Setup Expo and EAS
         uses: expo/expo-github-action@v8
         with:
@@ -41,6 +59,12 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas build -p android --profile production --non-interactive --wait
 
+      # Display Build Logs (Optional for Debugging)
       - name: Display Build Logs
         if: failure()
-        run: cat /home/expo/workingdir/build/logs/EASBuildWorker.log
+        run: |
+          if [ -f /home/expo/workingdir/build/logs/EASBuildWorker.log ]; then
+            cat /home/expo/workingdir/build/logs/EASBuildWorker.log
+          else
+            echo "No log file found."
+          fi
