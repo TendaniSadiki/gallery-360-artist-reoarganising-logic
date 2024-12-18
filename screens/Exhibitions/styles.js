@@ -137,4 +137,44 @@ export default styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "left",
   },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+  },
+  
+  modalHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  
+  errorMessage: {
+    color: 'red',
+    marginVertical: 5,
+  },
+  
+  closeModalButton: {
+    marginTop: 20,
+    backgroundColor: 'black',
+    paddingVertical: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  
+  closeModalText: {
+    color: 'white',
+    fontSize: 16,
+  }
+  
 });
+
+

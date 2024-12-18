@@ -70,14 +70,9 @@ export default styles = StyleSheet.create({
     width: 270,
     flexDirection: "row",
     justifyContent: "space-around",
-
     paddingTop: 10,
     marginBottom: 20,
   },
-  menuItem: {
-    alignItems: "center",
-  },
-
   profileCard: {
     backgroundColor: "transparent",
     borderRadius: 8,
@@ -104,7 +99,7 @@ export default styles = StyleSheet.create({
   },
   addButton: {
     marginTop: 10,
-    backgroundColor: "transparent",
+    backgroundColor: "#8B4513", // Brown color for the button
     borderRadius: 10,
     borderColor: "#CEB89E",
     borderWidth: 1,
@@ -136,13 +131,13 @@ export default styles = StyleSheet.create({
   signInButton: {
     width: "40%",
     height: 50,
-    backgroundColor: "#CEB89E", // Set this to your desired button background color
+    backgroundColor: "#988874", // Brown color for the button
     borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
   },
   buttonText: {
-    color: "#fff", // Set this to your desired button text color
+    color: "#fff", // White text color for contrast
     fontSize: 15,
   },
   newArtworkContainer: {
@@ -219,14 +214,15 @@ export default styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "white",
+    color: "black",
+    marginBottom: 5,
   },
+
   columnWrapper: {
     justifyContent: "space-between",
   },
   artworksMenu: {
     height: 25,
-
     flexDirection: "row",
   },
 

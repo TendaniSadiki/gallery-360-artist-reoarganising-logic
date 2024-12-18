@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import styles from "./styles";
@@ -36,6 +37,8 @@ const SetupProfileScreen = ({ navigation }) => {
   const [errors, setErrors] = useState({});
   const [selectedArtworks, setSelectedArtworks] = useState([]);
   const [isFocused, setIsFocused] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
+
 
   const fromDate = Timestamp.fromDate(input.date);
   const toDate = Timestamp.fromDate(input2.date);
@@ -62,6 +65,9 @@ const SetupProfileScreen = ({ navigation }) => {
 
   function validateEvent() {
     let errors = {};
+    let showModal = false; // Flag to control modal visibility
+  
+    // Validate Name, Email, Contact Number, Address, Description (same as before)
     if (!name) errors.name = "Name is required";
     if (!email) {
       errors.email = "Email is required";
@@ -71,9 +77,33 @@ const SetupProfileScreen = ({ navigation }) => {
     if (!contactNumber) errors.contactNumber = "Contact Number is required";
     if (!address) errors.address = "Address is required";
     if (!desc) errors.desc = "Description is required.";
+  
+    // Validate Dates
+    if (!input.date || !input2.date) {
+      errors.date = "Both From Date and To Date are required.";
+      showModal = true;
+    } else if (input.date > input2.date) {
+      errors.date = "From Date must be earlier than or equal to To Date.";
+      showModal = true;
+    }
+  
+    // Validate Times if Dates are the Same
+    if (input.date.toDateString() === input2.date.toDateString()) {
+      if (!input3.date || !input4.date) {
+        errors.time = "Both From Time and To Time are required.";
+        showModal = true;
+      } else if (input3.date >= input4.date) {
+        errors.time = "From Time must be earlier than To Time.";
+        showModal = true;
+      }
+    }
+  
     setErrors(errors);
+    setShowDateModal(showModal); // Set modal visibility based on validation errors
     return Object.keys(errors).length === 0;
   }
+  
+  
 
   const writeUserData = () => {
     addDoc(colRef, {
@@ -196,41 +226,62 @@ const SetupProfileScreen = ({ navigation }) => {
 
         <Text style={{ fontSize: 16, color: "#fff", paddingHorizontal: 12 }}>DATE</Text>
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <TextInput
-            style={styles.dimensionsInput}
-            placeholder="FROM"
-            placeholderTextColor="white"
-            value={input.date.toLocaleDateString()}
-            onPressIn={input.showDatepicker}
-          />
-          {input.show && (
-            <DateTimePicker
-              testID="dateTimePicker1"
-              value={input.date}
-              mode={input.mode}
-              is24Hour={true}
-              display="default"
-              onChange={input.onChange}
-            />
-          )}
-          <TextInput
-            style={styles.dimensionsInput}
-            placeholder="TO"
-            placeholderTextColor="white"
-            value={input2.date.toLocaleDateString()}
-            onPressIn={input2.showDatepicker}
-          />
-          {input2.show && (
-            <DateTimePicker
-              testID="dateTimePicker2"
-              value={input2.date}
-              mode={input2.mode}
-              is24Hour={true}
-              display="default"
-              onChange={input2.onChange}
-            />
-          )}
-        </View>
+  <TextInput
+    style={styles.dimensionsInput}
+    placeholder="FROM"
+    placeholderTextColor="white"
+    value={input.date.toLocaleDateString()}
+    onPressIn={input.showDatepicker}
+  />
+  {input.show && (
+    <DateTimePicker
+      testID="dateTimePicker1"
+      value={input.date}
+      mode={input.mode}
+      is24Hour={true}
+      display="default"
+      onChange={input.onChange}
+    />
+  )}
+  
+
+  <TextInput
+    style={styles.dimensionsInput}
+    placeholder="TO"
+    placeholderTextColor="white"
+    value={input2.date.toLocaleDateString()}
+    onPressIn={input2.showDatepicker}
+  />
+  {input2.show && (
+    <DateTimePicker
+      testID="dateTimePicker2"
+      value={input2.date}
+      mode={input2.mode}
+      is24Hour={true}
+      display="default"
+      onChange={input2.onChange}
+    />
+  )}
+ 
+</View>
+
+<Modal
+  transparent={true}
+  animationType="slide"
+  visible={showDateModal}
+  onRequestClose={() => setShowDateModal(false)}
+>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalHeader}>Date and Time Validation Errors</Text>
+      {errors.date && <Text style={styles.errorMessage}>{errors.date}</Text>}
+      {errors.time && <Text style={styles.errorMessage}>{errors.time}</Text>}
+      <TouchableOpacity onPress={() => setShowDateModal(false)} style={styles.closeModalButton}>
+        <Text style={styles.closeModalText}>Close</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
 
         <Text style={{ fontSize: 16, color: "#fff", paddingHorizontal: 12 }}>TIME</Text>
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>

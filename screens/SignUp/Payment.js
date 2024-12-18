@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image,
   ScrollView,
   ActivityIndicator,
 } from "react-native";
@@ -13,78 +12,69 @@ import { StackActions } from "@react-navigation/native";
 import { setDoc, doc } from "firebase/firestore";
 import { FIRESTORE_DB, FIREBASE_AUTH } from "../../firebase/firebase.config";
 import { sendEmailVerification } from "firebase/auth";
+import { useDocumentFunctions } from "../../hooks/useDocumentFunctions";
 
 const PaymentScreen = ({ navigation }) => {
   const auth = FIREBASE_AUTH;
-
   const user = auth.currentUser;
+  const { pickDocument, document, documentUrl, loading } = useDocumentFunctions();
 
   // Define state variables
-  const [cardHolder, setCardHolder] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
+  const [accountHolder, setAccountHolder] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [branchCode, setBranchCode] = useState("");
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
 
   // Form validation
   const validateForm = () => {
     let errors = {};
-    if (cardHolder.trim() === "") {
-      errors.cardHolder = "Card holder is required";
-    } else if (!/^[a-zA-Z]+ [a-zA-Z]+$/.test(cardHolder)) {
-      errors.cardHolder = "Please enter a valid full name (e.g., John Doe)";
-    }
-    if (!cardNumber) {
-      errors.cardNumber = "Card number is required";
-    } else if (cardNumber.length < 14) {
-      errors.cardNumber = "Enter a valid card number";
-    } else if (!/^\d+$/.test(cardNumber)) {
-      errors.cardNumber = "Please enter a valid card number (digits only)";
-    }
-    if (!expiry) {
-      errors.expiry = "Expiry date is required";
-    } else if (!/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(expiry)) {
-      errors.expiry = "Expiry date must be in MM/YY format";
-    } else {
-      const [month, year] = expiry.split("/").map(Number);
-      const currentYear = new Date().getFullYear() % 100; // Get last two digits of current year
-      const currentMonth = new Date().getMonth() + 1;
 
-      if (year < currentYear || (year === currentYear && month < currentMonth)) {
-        errors.expiry = "Expiry date cannot be in the past";
-      }
+    if (!accountHolder.trim()) {
+      errors.accountHolder = "Account holder name is required";
+    } else if (!/^[a-zA-Z\s]+$/.test(accountHolder)) {
+      errors.accountHolder = "Account holder name must only contain letters";
     }
+
+    if (!bankName.trim()) {
+      errors.bankName = "Bank name is required";
+    }
+
+    if (!accountNumber.trim()) {
+      errors.accountNumber = "Account number is required";
+    } else if (!/^\d{6,16}$/.test(accountNumber)) {
+      errors.accountNumber = "Enter a valid account number (6-16 digits)";
+    }
+
+    if (!branchCode.trim()) {
+      errors.branchCode = "Branch code is required";
+    } else if (!/^\d{6}$/.test(branchCode)) {
+      errors.branchCode = "Branch code must be 6 digits";
+    }
+
+    if (!document) {
+      errors.document = "Please upload a supporting document";
+    }
+
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
-// Handle expiry date input
-const handleExpiryInput = (text) => {
-  // Remove any characters that are not digits
-  let formattedText = text.replace(/[^0-9]/g, "");
-
-  // Add the '/' after the second digit (MM part)
-  if (formattedText.length > 2) {
-    formattedText = `${formattedText.substring(0, 2)}/${formattedText.substring(2, 4)}`;
-  }
-
-  setExpiry(formattedText);  // Set the formatted value
-};
 
   // Write payment data to Firestore
   const writeUserData = async () => {
     try {
-      setLoading(true); // Start loading
       await setDoc(doc(FIRESTORE_DB, "paymentDetails", user.uid), {
-        cardHolder,
-        cardNumber,
-        expiry,
-        cvv,
-        artistUid: user.uid,
+        accountHolder,
+        bankName,
+        accountNumber,
+        branchCode,
+        userId: user.uid,
+        documentName: document?.name || "N/A", // Save document name
+        documentUrl: documentUrl || "N/A",   // Save document URL
       });
-      console.log("Payment data saved");
+      console.log("Account info saved");
 
-      // Check if email is verified, if not, send verification
+      // Send email verification if needed
       if (user && !user.emailVerified) {
         await sendEmailVerification(user);
         alert("Email verification sent. Please check your inbox.");
@@ -93,10 +83,8 @@ const handleExpiryInput = (text) => {
       // Navigate to login
       navigation.dispatch(StackActions.replace("Login"));
     } catch (error) {
-      console.log("Error saving payment data: ", error);
-      alert("Error saving payment data. Please try again.");
-    } finally {
-      setLoading(false); // Stop loading
+      console.error("Error saving account info: ", error);
+      alert("Error saving account info. Please try again.");
     }
   };
 
@@ -120,68 +108,93 @@ const handleExpiryInput = (text) => {
   return (
     <View style={styles.container}>
       <ScrollView>
-        <View style={styles.imageContainer}>
-          <Image
-            style={styles.image}
-            source={require("../../assets/images/visa.png")}
-          />
-        </View>
-        <Text style={styles.header}>Payment Cards</Text>
+        <Text style={styles.header}>Bank Account Details</Text>
         <Text style={styles.paragraph}>
-          Payment account that will be used to receive payments
+          Provide the bank account details where payments will be sent.
         </Text>
 
-        {/* Card Holder Input */}
+        {/* Account Holder Name */}
         <TextInput
           style={styles.input}
-          placeholder="Card Holder"
+          placeholder="Account Holder Name"
           placeholderTextColor="white"
-          value={cardHolder}
-          onChangeText={setCardHolder}
+          value={accountHolder}
+          onChangeText={setAccountHolder}
         />
-        {errors.cardHolder && <Text style={styles.errorMessage}>{errors.cardHolder}</Text>}
+        {errors.accountHolder && (
+          <Text style={styles.errorMessage}>{errors.accountHolder}</Text>
+        )}
 
-        {/* Card Number Input */}
+        {/* Bank Name */}
         <TextInput
           style={styles.input}
-          placeholder="Card Number"
+          placeholder="Bank Name"
           placeholderTextColor="white"
-          value={cardNumber}
-          onChangeText={setCardNumber}
+          value={bankName}
+          onChangeText={setBankName}
+        />
+        {errors.bankName && (
+          <Text style={styles.errorMessage}>{errors.bankName}</Text>
+        )}
+
+        {/* Account Number */}
+        <TextInput
+          style={styles.input}
+          placeholder="Account Number"
+          placeholderTextColor="white"
+          value={accountNumber}
+          onChangeText={setAccountNumber}
           keyboardType="numeric"
-          maxLength={16}
         />
-        {errors.cardNumber && <Text style={styles.errorMessage}>{errors.cardNumber}</Text>}
+        {errors.accountNumber && (
+          <Text style={styles.errorMessage}>{errors.accountNumber}</Text>
+        )}
 
-        {/* Expiry Input */}
+        {/* Branch Code */}
         <TextInput
           style={styles.input}
-          placeholder="Expiry (MM/YY)"
+          placeholder="Branch Code"
           placeholderTextColor="white"
-          value={expiry}
-          onChangeText={(text) => handleExpiryInput(text)}  // Use the handler function
+          value={branchCode}
+          onChangeText={setBranchCode}
           keyboardType="numeric"
-          maxLength={5} // Limit the length to 5 (MM/YY)
         />
+        {errors.branchCode && (
+          <Text style={styles.errorMessage}>{errors.branchCode}</Text>
+        )}
 
-        {errors.expiry && <Text style={styles.errorMessage}>{errors.expiry}</Text>}
+        {/* Document Upload */}
+        <TouchableOpacity style={styles.uploadButton} onPress={pickDocument}>
+          <Text style={styles.buttonText}>
+            {document ? `Selected: ${document.name}` : "Upload Supporting Document"}
+          </Text>
+        </TouchableOpacity>
+        {errors.document && (
+          <Text style={styles.errorMessage}>{errors.document}</Text>
+        )}
 
-        {/* CVV Input */}
-        <TextInput
-          style={styles.input}
-          placeholder="CVV (Optional)"
-          placeholderTextColor="white"
-          value={cvv}
-          onChangeText={setCvv}
-          keyboardType="numeric"
-          maxLength={4}
-        />
+        {/* Document Upload Progress */}
+        {loading && (
+          <View style={styles.progressContainer}>
+            <Text style={styles.progressText}>Uploading...</Text>
+            <ActivityIndicator size="small" color="#CEB89E" />
+          </View>
+        )}
 
         {/* Continue Button */}
-        <TouchableOpacity style={styles.continueButton} onPress={handleContinue} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Continue</Text>}
+        <TouchableOpacity
+          style={styles.continueButton}
+          onPress={handleContinue}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Continue</Text>
+          )}
         </TouchableOpacity>
 
+        {/* Skip Button */}
         <TouchableOpacity style={styles.button} onPress={handleSkip}>
           <Text style={styles.smallerButtonText}>I'll do it later</Text>
         </TouchableOpacity>
@@ -190,7 +203,6 @@ const handleExpiryInput = (text) => {
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -198,16 +210,6 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     padding: 20,
   },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1E1E1E",
-
-    borderRadius: 10,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-  },
-
   input: {
     width: "100%",
     height: 50,
@@ -229,14 +231,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-  imageContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#CEB89E",
-    borderRadius: 40,
-
-    height: 280,
-  },
   paragraph: {
     fontSize: 16,
     color: "white",
@@ -250,7 +244,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 10,
-    backgroundColor: "transparent", // Set this to your desired button color
+    backgroundColor: "transparent",
     padding: 10,
     borderRadius: 5,
     alignItems: "center",
@@ -264,6 +258,21 @@ const styles = StyleSheet.create({
     color: "red",
     marginBottom: 10,
     textAlign: "left",
+  },
+  uploadButton: {
+    backgroundColor: "#6C63FF",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  progressContainer: {
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  progressText: {
+    color: "white",
+    fontSize: 16,
   },
 });
 

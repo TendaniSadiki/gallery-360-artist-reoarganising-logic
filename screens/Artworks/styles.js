@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native";
-
+import { Dimensions } from "react-native";
+const { width, height } = Dimensions.get("window");
 export default styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -11,8 +12,10 @@ export default styles = StyleSheet.create({
     alignItems: "center",
   },
   button: {
-    padding: 10,
+    padding: 15, // Increased padding
+    borderRadius: 12,
   },
+  
   exhibitionText: {
     fontSize: 20,
     fontWeight: "bold",
@@ -54,10 +57,12 @@ export default styles = StyleSheet.create({
   },
 
   coverImage: {
-    width: "100%",
-    height: 200, // Adjust this value to control the image height
+    width: width * 0.95,
+    height: height * 0.35,
+    borderRadius: 10,
     resizeMode: "cover",
   },
+  
   title: {
     fontSize: 24,
     fontWeight: "bold",
@@ -103,7 +108,10 @@ export default styles = StyleSheet.create({
     color: "white",
     paddingHorizontal: 20,
     paddingBottom: 20,
+    lineHeight: 22,
+    overflow: "hidden",
   },
+  
   viewsContainer: {
     flexDirection: "row",
     marginLeft: 20,
@@ -121,14 +129,14 @@ export default styles = StyleSheet.create({
     position: "absolute",
     backgroundColor: "black",
     bottom: 0,
-    width: 350,
-    marginTop: 10,
+    width: "100%",
     flexDirection: "row",
     justifyContent: "space-around",
     borderTopWidth: 1,
     borderColor: "#CEB89E",
-    paddingTop: 10,
+    paddingVertical: 10,
   },
+  
   menuItem: {
     alignItems: "center",
   },
@@ -178,7 +186,13 @@ export default styles = StyleSheet.create({
     borderColor: "#CEB89E",
     padding: 10,
     alignSelf: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 5,
   },
+  
 
   profileText: {
     flexDirection: "column",
@@ -251,3 +265,4 @@ export default styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 });
+

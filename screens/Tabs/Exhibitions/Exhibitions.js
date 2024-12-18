@@ -104,6 +104,8 @@ const deleteExhibitionById = async (exhibitionId) => {
         <View style={styles.cardInfoContainer}>
           <Text style={styles.cardTitle}>{item.name}</Text>
           <Text style={styles.cardAddress}>{item.address}</Text>
+          <Text>Latitude: {item.coordinates?.latitude}</Text>
+          <Text>Longitude: {item.coordinates?.longitude}</Text>
           <Text style={styles.cardDescription}>
             {item.desc.slice(0, 160)}
             {item.desc.length > 160 ? "..." : ""}

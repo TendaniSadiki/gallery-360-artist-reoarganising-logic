@@ -25,6 +25,12 @@ const SetupProfileScreen = ({ navigation }) => {
   const [city, setCity] = useState("");
   const [province, setProvince] = useState("");
   const [postalCode, setPostalCode] = useState("");
+  const [localArea, setLocalArea] = useState(""); // Added
+  const [type, setType] = useState(""); // Added
+  const [zone, setZone] = useState(""); // Added
+  const [country, setCountry] = useState(""); // Added
+  const [longitude, setLongitude] = useState(null); // Added
+  const [latitude, setLatitude] = useState(null); // Added
   const [website, setWebsite] = useState("");
   const [bio, setBio] = useState("");
   const [modalIsVisible, setModalIsVisible] = useState(false);
@@ -62,6 +68,18 @@ const SetupProfileScreen = ({ navigation }) => {
     if (!/^\d{4}$/.test(postalCode)) {
       validationErrors.postalCode = "Please enter a valid 4-digit postal code";
     }
+    if (!localArea.trim()) {
+      validationErrors.localArea = "Local area is required";
+    }
+    if (!type.trim()) {
+      validationErrors.type = "Type is required";
+    }
+    if (!zone.trim()) {
+      validationErrors.zone = "Zone is required";
+    }
+    if (!country.trim()) {
+      validationErrors.country = "Country is required";
+    }
     // Website URL Validation
     if (website && !/^(http|https):\/\/[^\s]+/.test(website)) {
       validationErrors.website = "Please enter a valid website URL (starting with http or https)";
@@ -84,6 +102,8 @@ const SetupProfileScreen = ({ navigation }) => {
     return Object.keys(validationErrors).length === 0;
   };
 
+  
+  
   const handleSaveProfile = async () => {
     if (validateForm()) {
       try {
@@ -101,6 +121,12 @@ const SetupProfileScreen = ({ navigation }) => {
               city: city,
               province: province,
               postalCode: postalCode,
+              localArea: localArea,
+              type: type,
+              zone: zone,
+              country: country,
+              latitude: latitude,
+              longitude: longitude,
             },
             websiteurl: website,
             dateofbirth: input.date ? input.date.toLocaleDateString() : "",
@@ -145,24 +171,22 @@ const SetupProfileScreen = ({ navigation }) => {
         <View>
           {/* Profile Image Section */}
           <View style={styles.imageContainer}>
-            <Image
-              source={image ? { uri: image } : require("../../assets/images/profile_image.jpg")}
-              style={{
-                width: 150,
-                height: 150,
-                alignSelf: "center",
-                borderRadius: 75,
-              }}
-            />
-            <TouchableOpacity onPress={pickOneImage}>
-              <Icon
-                name="camera"
-                size={20}
-                color="gray"
-                style={styles.cameraIcon}
-              />
-            </TouchableOpacity>
-          </View>
+  {/* Display uploaded image or default image */}
+  <Image
+    source={image ? { uri: image } : require("../../assets/images/profile_image.jpg")}
+    style={{
+      width: 150,
+      height: 150,
+      alignSelf: "center",
+      borderRadius: 75,
+    }}
+  />
+  
+  {/* Button to pick an image */}
+  <TouchableOpacity onPress={pickOneImage}>
+    <Icon name="camera" size={20} color="gray" style={styles.cameraIcon} />
+  </TouchableOpacity>
+</View>
 
           {/* Upload Progress */}
           {progress !== 0 && (
@@ -276,6 +300,53 @@ const SetupProfileScreen = ({ navigation }) => {
           keyboardType="numeric"
         />
         {errors.postalCode && <Text style={styles.errorMessage}>{errors.postalCode}</Text>}
+        <TextInput
+          style={styles.input}
+          placeholder="LOCAL AREA"
+          placeholderTextColor="white"
+          value={localArea}
+          onChangeText={(text) => {
+            setErrors({});
+            setLocalArea(text);
+          }}
+        />
+        {errors.localArea && <Text style={styles.errorMessage}>{errors.localArea}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="TYPE"
+          placeholderTextColor="white"
+          value={type}
+          onChangeText={(text) => {
+            setErrors({});
+            setType(text);
+          }}
+        />
+        {errors.type && <Text style={styles.errorMessage}>{errors.type}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="ZONE"
+          placeholderTextColor="white"
+          value={zone}
+          onChangeText={(text) => {
+            setErrors({});
+            setZone(text);
+          }}
+        />
+        {errors.zone && <Text style={styles.errorMessage}>{errors.zone}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="COUNTRY"
+          placeholderTextColor="white"
+          value={country}
+          onChangeText={(text) => {
+            setErrors({});
+            setCountry(text);
+          }}
+        />
+        {errors.country && <Text style={styles.errorMessage}>{errors.country}</Text>}
 
           <TextInput
             style={styles.input}

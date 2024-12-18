@@ -41,16 +41,20 @@ const ArtworksScreen = ({ navigation }) => {
       console.warn("Empty or undefined item:", item);
       return null;
     }
+    const defaultImage =
+      item.imgUrls?.find((img) => img.default)?.imgUrl || item.imgUrls?.[0]?.imgUrl || "https://via.placeholder.com/150";
+
     return (
       <View style={[styles.card, { backgroundColor: '#f0f0f0', margin: 5 }]}>
         <TouchableOpacity onPress={() => navigation.navigate("Artworks2", { item, image, name })} >
-          <Text style={styles.cardTitle}>{item.title || "Untitled Artwork"}</Text>
-          <Text style={styles.cardText}>Type: {item.artworkType?.join(", ") || "Unknown"}</Text>
+        <Image source={{ uri: defaultImage }} style={styles.cardImage} />
+        <Text style={styles.cardTitle}>{item.title || "Untitled Artwork"}</Text>
+          {/* <Text style={styles.cardText}>Type: {item.artworkType?.join(", ") || "Unknown"}</Text>
           <Text style={styles.cardText}>Year: {item.year || "N/A"}</Text>
           <Text style={styles.cardText}>Price: {item.price ? `R ${item.price} ` : "Not Specified"}</Text>
           <Text style={styles.cardText}>Condition: {item.condition || "N/A"}</Text>
           <Text style={styles.cardText}>Availability: {item.availability?.join(", ") || "N/A"}</Text>
-          <Text style={styles.cardText}>Collection: {item.collection?.name || "None"}</Text>
+          <Text style={styles.cardText}>Collection: {item.collection?.name || "None"}</Text> */}
         </TouchableOpacity>
 
       </View>

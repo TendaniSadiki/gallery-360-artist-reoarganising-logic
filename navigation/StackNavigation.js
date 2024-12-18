@@ -41,7 +41,13 @@ const MainStack = () => {
     const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, (user) => {
       if (user) {
         console.log("User is signed in:", user);
-        setInitialRoute("Tabs"); // Navigate to main tabs
+        if (user.emailVerified) {
+          console.log("Email is verified.");
+          setInitialRoute("Tabs"); // Navigate to main tabs
+        } else {
+          console.log("Email is not verified.");
+          setInitialRoute("Onboarding"); // Navigate to onboarding/login
+        }
       } else {
         console.log("No user is signed in.");
         setInitialRoute("Onboarding"); // Navigate to onboarding/login
@@ -84,7 +90,6 @@ const DashboardStack = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
       <Stack.Screen name="NewArtwork" component={NewArtwork} />
-      {/* Add other screens if necessary */}
     </Stack.Navigator>
   );
 };

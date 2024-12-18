@@ -16,7 +16,7 @@ import { FIRESTORE_DB, storage, FIREBASE_AUTH } from "../../../firebase/firebase
 
 // import * as ImagePicker from "expo-image-picker";
 // import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { addDoc, collection, onSnapshot } from "firebase/firestore";
+import { addDoc, collection, onSnapshot, Timestamp } from "firebase/firestore";
 import {
   SelectList,
   MultipleSelectList,
@@ -48,12 +48,14 @@ const NewArtwork = ({ navigation }) => {
   const [artworkType, setArtworkType] = useState([]);
   const [medium, setMedium] = useState("");
   const [price, setPrice] = useState(0);
+  const [weight, setWeight] = useState(0);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
   const [breadth, setBreadth] = useState(0);
   const [length, setLength] = useState(0);
   const [year, setYear] = useState("");
   const [condition, setCondition] = useState("");
+  const [timestamp, setTimestamp] = useState("");
 
   const [statement, setStatement] = useState("");
   //const [progress, setProgress] = useState("");
@@ -100,7 +102,9 @@ function validateArtwork() {
   if (!condition) {
     errors.condition = "Condition is required.";
   }
-
+  if (!weight) {
+    errors.weight = "Weight is required.";
+  }
   // Check for specific cases (e.g., width, height can be 0)
   if (width < 0) {
     errors.width = "Width must be a positive number.";
@@ -150,6 +154,7 @@ function validateArtwork() {
           length: length,
           breadth: breadth,
         },
+        weight: weight,
         year: year,
         condition: condition,
         isAvailable: isAvailable,
@@ -161,6 +166,7 @@ function validateArtwork() {
         availability: selectedArtworks,
         collection: niceCol,
         artistUid: user.uid,
+        timestamp: Date.now()
       })
         .then((result) => {
           // Success callback
@@ -227,69 +233,41 @@ function validateArtwork() {
         <View>
           <Text style={styles.header}>New Artwork</Text>
         </View>
-        {image ? (
-          <>
-            <View>
-              <Image
-                source={image}
-                style={{
-                  width: 150,
-                  height: 150,
-                  alignSelf: "center",
-                  borderRadius: 75,
-                  marginTop: 40,
-                  padding: 20,
-                  borderRadius: 10,
-                  width: "100%",
-                  height: 500, // Adjust this value to control the image height
-                  resizeMode: "cover",
-                  borderRadius: 10,
-                  marginBottom: 20,
-                }}
-              />
-            </View>
-            <Carousel
-              data={images}
-              renderItem={({ item }) => (
-                <Image source={item} style={styles.carouselImage} />
-              )}
-              sliderWidth={300}
-              itemWidth={160}
-            />
-            <TouchableOpacity
-              style={styles.imageContainer2}
-              onPress={pickMultipleImages}
-            >
-              <Icon
-                name="camera"
-                size={20}
-                color="gray"
-                style={styles.cameraIcon}
-              />
-              <Text style={styles.textIcon}>Upload More</Text>
-              <Text style={styles.textIcon2}>
-                Gallery must be from the same artwork
-              </Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <View>
-            <TouchableOpacity
-              style={styles.imageContainer}
-              onPress={pickMultipleImages}
-            >
-              <Icon
-                name="camera"
-                size={20}
-                color="gray"
-                style={styles.cameraIcon}
-              />
-              <Text style={{ color: "#fff", fontSize: 14 }}>
-                Upload Artwork
-              </Text>
-            </TouchableOpacity>
-          </View>
+        <>
+  {images.length > 0 ? (
+    <>
+      <Carousel
+        data={images}
+        renderItem={({ item }) => (
+          <Image source={{ uri: item.uri }} style={styles.carouselImage} />
         )}
+        sliderWidth={300}
+        itemWidth={160}
+      />
+      <TouchableOpacity
+        style={styles.imageContainer2}
+        onPress={pickMultipleImages}
+      >
+        <Icon name="camera" size={20} color="gray" style={styles.cameraIcon} />
+        <Text style={styles.textIcon}>Upload More</Text>
+        <Text style={styles.textIcon2}>
+          Gallery must be from the same artwork
+        </Text>
+      </TouchableOpacity>
+    </>
+  ) : (
+    <View>
+      <TouchableOpacity
+        style={styles.imageContainer}
+        onPress={pickMultipleImages}
+      >
+        <Icon name="camera" size={20} color="gray" style={styles.cameraIcon} />
+        <Text style={{ color: "#fff", fontSize: 14 }}>Upload Artwork</Text>
+      </TouchableOpacity>
+    </View>
+  )}
+</>
+
 
         {/* Image Input */}
         {/* Full Name Input */}
@@ -379,6 +357,17 @@ function validateArtwork() {
             ) : null}
           </View>
         </View>
+        <TextInput
+          style={styles.input}
+          placeholder="WEIGHT e.g Kg"
+          placeholderTextColor="white"
+          value={weight}
+          keyboardType="numeric"
+          onChangeText={setWeight}
+        />
+        {errors.weight ? (
+          <Text style={styles.errorMessage}>{errors.weight}</Text>
+        ) : null}
         <TextInput
           style={styles.input}
           placeholder="YEAR"

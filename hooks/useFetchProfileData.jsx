@@ -14,6 +14,7 @@ export const useFetchProfileData = () => {
   const [bio, setBio] = useState("");
   const [signature, setSignature] = useState("");
   console.log(image)
+  
   useEffect(() => {
     const fetchData = async () => {
       try {

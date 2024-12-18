@@ -1,27 +1,27 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-//import Icon from "react-native-vector-icons/FontAwesome";
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
-const ReviewsComponent = ({ handleRatingSubmit, rating }) => {
-  console.log('in reviews components', rating);
+const ReviewsComponent = ({ rating }) => {
+  // Check if rating is 0 and show a default message
+  const displayRating = rating === 0 ? "No rating yet" : `${rating}.0`;
+
   return (
     <View style={styles.ratingContainer}>
       <View style={styles.reviewsCount}>
-        <Text style={styles.reviewsText}>{rating}.0</Text>
+        <Text style={styles.reviewsText}>{displayRating}</Text>
       </View>
 
       <View style={styles.ratingButtonContainer}>
         {[5, 4, 3, 2, 1].map((num) => (
-          <TouchableOpacity
+          <View
             key={num}
-            onPress={() => handleRatingSubmit(num)}
             style={[
               styles.ratingButton,
-              num === rating ? styles.selectedRating : null,
+              num <= rating ? styles.selectedRating : null,
             ]}
           >
             <Text style={styles.ratingButtonText}>{num}</Text>
-          </TouchableOpacity>
+          </View>
         ))}
       </View>
     </View>
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   ratingButtonContainer: {
-    flexDirection: "column",
+    flexDirection: "row", // Make the buttons row instead of column
     alignItems: "center",
   },
   ratingButton: {
@@ -49,9 +49,11 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 10,
     alignItems: "center",
+    margin: 2, // Add some spacing between buttons
   },
   selectedRating: {
-    backgroundColor: "#CEB89E",
+    backgroundColor: "#CEB89E", // Highlight the selected rating button
+    borderRadius: 5, // Add rounded corners to the selected button
   },
   ratingButtonText: {
     color: "white",
@@ -59,14 +61,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 5, // Add some spacing between numbers
   },
   reviewsCount: {
-    height: 200,
+    height: 60,
     width: "40%",
-
     justifyContent: "center",
+    alignItems: "center", // Center the reviews text
   },
   reviewsText: {
     color: "white",
-    fontSize: 60,
+    fontSize: 30, // Adjusted font size for better visibility
     textAlign: "center",
   },
 });
