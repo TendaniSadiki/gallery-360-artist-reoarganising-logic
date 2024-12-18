@@ -35,6 +35,11 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      - name: Patch build.gradle files
+        run: |
+          find . -name "build.gradle" -exec sed -i 's/useCoreDependencies()//g' {} +
+          find . -name "build.gradle" -exec sed -i 's/compileSdkVersion.*/compileSdkVersion 30/g' {} +
+
       # Android APK Build
       - name: Build Android APK
         env:
