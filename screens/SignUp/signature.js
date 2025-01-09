@@ -7,11 +7,13 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import { SignatureView } from "react-native-signature-capture-view";
+// import { SignatureView } from "react-native-signature-capture-view";
+import SignatureScreen from "react-native-signature-canvas";
 import { setDoc, doc, serverTimestamp } from "firebase/firestore";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebase/firebase.config";
 
 const MyPage = ({ route, navigation }) => {
+  const ref = useRef();
   const auth = FIREBASE_AUTH;
   const signatureRef = useRef(null);
   const [signature, setSignature] = useState(""); // Holds the captured signature
@@ -27,7 +29,29 @@ const MyPage = ({ route, navigation }) => {
     }
 
     setDoc(
-      doc(FIRESTORE_DB, "artists", user.uid), 
+      doc(FIRESTORE_DB, "artists", user.uid),
+      {
+        signature: signature, // Save the captured signature
+        isEnabled: false, // Setting the user profile as not yet enabled
+        timeStamp: serverTimestamp(), // Add a timestamp
+      },
+      { merge: true } // Merge to avoid overwriting existing data
+    )
+      .then(() => {
+        Alert.alert("Your signature has been uploaded successfully!");
+      })
+      .catch((error) => {
+        Alert.alert("Error uploading signature. Please try again.");
+        console.log("Error saving signature: ", error);
+      });
+  };
+  // Called after ref.current.readSignature() reads a non-empty base64 string
+  const handleOK = (signature) => {
+    console.log({ sign: signature });
+
+    // onOK(signature); // Callback from Component props
+    setDoc(
+      doc(FIRESTORE_DB, "artists", user.uid),
       {
         signature: signature, // Save the captured signature
         isEnabled: false, // Setting the user profile as not yet enabled
@@ -44,19 +68,50 @@ const MyPage = ({ route, navigation }) => {
       });
   };
 
+  // Called after ref.current.readSignature() reads an empty string
+  const handleEmpty = () => {
+    console.log("Empty");
+  };
+
+  // Called after ref.current.clearSignature()
+  const handleClear = () => {
+    console.log("clear success!");
+  };
+
+  // Called after end of stroke
+  const handleEnd = () => {
+    ref.current.readSignature();
+  };
+
+  // Called after ref.current.getData()
+  const handleData = (data) => {
+    console.log(data);
+  };
+
+
   return (
     <View style={styles.container}>
       <ScrollView
-        style={{  }}
+        style={{}}
         contentContainerStyle={{ flex: 1, paddingTop: 40, paddingBottom: 20 }}
       >
         <Text style={styles.header}>Signature</Text>
         <Text style={styles.paragraph}>
           This signature will be used as proof of authenticity for your artwork.
         </Text>
-        
+
         {/* Signature Capture Component */}
-        <SignatureView
+        <SignatureScreen
+          ref={ref}
+          onEnd={handleEnd}
+          onOK={handleOK}
+          onEmpty={handleEmpty}
+          onClear={handleClear}
+          onGetData={handleData}
+          autoClear={false}
+          descriptionText={'Your legally recognised signature that will be used to verify your artworks as your own'}
+        />
+        {/* <SignatureView
           style={{
             borderWidth: 2,
             flex: 1,
@@ -71,7 +126,7 @@ const MyPage = ({ route, navigation }) => {
             console.log("Cleared signature");
             setSignature(""); // Correct function to clear signature
           }}
-        />
+        /> */}
 
         {/* Clear and Save Signature Actions */}
         <View style={{ flexDirection: "row", justifyContent: "center", height: 50 }}>
