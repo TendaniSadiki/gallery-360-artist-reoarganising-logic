@@ -17,7 +17,7 @@ import {
   collection,
   Timestamp,
 } from "firebase/firestore";
-import Carousel from "react-native-snap-carousel"; // Import the library for the carousel.
+import Carousel from 'react-native-reanimated-carousel'; // Import the library for the carousel.
 import { useImageFunctions } from "../../hooks/useImageFunctions";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";

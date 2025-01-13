@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome"; 
-import Carousel from "react-native-snap-carousel"; 
+import Carousel from 'react-native-reanimated-carousel'; 
 import { useFetchProfileData } from "../../../hooks/useFetchProfileData.jsx";
 
 // Utility function to format date

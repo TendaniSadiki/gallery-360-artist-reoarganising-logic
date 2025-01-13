@@ -1,0 +1,20 @@
+{
+  "name": "gallery-360-artist",
+  "version": "1.0.0",
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "build": "eas build -p android",
+    "ba-local": "eas build --platform android --profile preview --local"
+  },
+  "dependencies": {
+    "firebase": "^9.23.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0"
+  },
+  "private": true
+}
