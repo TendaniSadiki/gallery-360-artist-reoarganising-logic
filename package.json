@@ -62,9 +62,8 @@
     "react-query": "^3.39.3",
     "react-redux": "^9.2.0",
     "redux": "^5.0.1",
-    "uuid": "^11.0.4",
     "typescript": "~5.3.3",
-    "undefined": "react-native-vector-icons/FontAwesome5"
+    "uuid": "^11.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

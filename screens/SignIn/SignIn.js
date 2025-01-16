@@ -15,8 +15,12 @@ import ForgetPassword from "./ForgetPassword";
 import auth from "../../firebase/firebase.config.js";
 import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 import ActionButton from "../../components/ActionButton.jsx";
+import { FIRESTORE_DB } from "../../firebase/firebase.config.js";
+import { collection, doc, getDoc } from "firebase/firestore";
+import { showToast } from "../../hooks/useToast";
 
-export default function App({ navigation }) {
+
+export default function SignInScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -71,13 +75,25 @@ export default function App({ navigation }) {
       // Sign in the user with email and password
       const userCredentials = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredentials.user;
-
+      showToast(user.email)
+      // setIsLoading(false);
+      // return
       // Check if the user's email is verified
       if (!user.emailVerified) {
-        setErrors({ email: "Please verify your email before signing in." });
-        await auth.signOut();
-        setIsLoading(false);
-        return;
+        const collectionRef = collection(FIRESTORE_DB, 'artists')
+        const docRef = doc(collectionRef, user.uid)
+        getDoc(docRef).then(async userProfile => {
+          if(userProfile.exists()) {
+            setErrors({ email: "Please verify your email before signing in." });
+            await auth.signOut();
+            setIsLoading(false);
+            return;
+          } else {
+            setIsLoading(false);
+            navigation.replace('Profile')
+          }
+        })
+
       }
 
       // If successful, reset errors and navigate to the next screen

@@ -67,6 +67,7 @@ export default function App({ navigation }) {
           navigation.navigate('Profile')
         }).catch(err => {
           showToast('Error occurred')
+          setIsLoading(false)
         })
     };
   }

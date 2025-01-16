@@ -19,7 +19,6 @@ const CustomFallbackWithTrace = ({ error, stackTrace }) => (
     <Text>Something happened!</Text>
     <Text>{error.toString()}</Text>
     <Text>{stackTrace.toString()}</Text>
-    <Button onPress={resetError} title={'Try again'} />
   </View>
 )
 export default function App() {
