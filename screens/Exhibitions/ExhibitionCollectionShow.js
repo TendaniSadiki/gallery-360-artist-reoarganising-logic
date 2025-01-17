@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome"; // Replace "FontAwesome" with the icon library of your choice.
-import Carousel from "react-native-snap-carousel"; // Import the library for the carousel.
+import Carousel from 'react-native-reanimated-carousel'; // Import the library for the carousel.
 //import BottomNavigationMenu from "./screens/Tabs/components/BottomNavigationMenu";
 
 const ExhibitionScreen = ({ navigation, route }) => {
@@ -66,6 +66,7 @@ const ExhibitionScreen = ({ navigation, route }) => {
           renderItem={({ item }) => (
             <Image source={item} style={styles.carouselImage} />
           )}
+          width={300}
           sliderWidth={300}
           itemWidth={160}
         />

@@ -6,18 +6,22 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Button,
 } from "react-native";
-import { SignatureView } from "react-native-signature-capture-view";
+// import { SignatureView } from "react-native-signature-capture-view";
+import SignatureScreen from "react-native-signature-canvas";
 import { setDoc, doc, serverTimestamp } from "firebase/firestore";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebase/firebase.config";
 
 const MyPage = ({ route, navigation }) => {
+  const ref = useRef();
   const auth = FIREBASE_AUTH;
-  const signatureRef = useRef(null);
   const [signature, setSignature] = useState(""); // Holds the captured signature
   const user = auth.currentUser;
-  const { userData } = route.params; // User data from the previous screen
-  console.log("Userdata in signature: ", userData);
+  console.log(auth);
+  
+  // const { userData } = route.params; // User data from the previous screen
+  // console.log("Userdata in signature: ", userData);
 
   // Function to save the signature in Firestore
   const writeUserData = () => {
@@ -27,7 +31,7 @@ const MyPage = ({ route, navigation }) => {
     }
 
     setDoc(
-      doc(FIRESTORE_DB, "artists", user.uid), 
+      doc(FIRESTORE_DB, "artists", user.uid),
       {
         signature: signature, // Save the captured signature
         isEnabled: false, // Setting the user profile as not yet enabled
@@ -36,71 +40,87 @@ const MyPage = ({ route, navigation }) => {
       { merge: true } // Merge to avoid overwriting existing data
     )
       .then(() => {
+        // show
         Alert.alert("Your signature has been uploaded successfully!");
+        navigation.navigate('Payment')
       })
       .catch((error) => {
         Alert.alert("Error uploading signature. Please try again.");
         console.log("Error saving signature: ", error);
       });
   };
+  // Called after ref.current.readSignature() reads a non-empty base64 string
+  const handleOK = (signature) => {
+    console.log({ sign: signature });
+    setSignature(signature)
+  };
+
+  // Called after ref.current.readSignature() reads an empty string
+  const handleSave = () => {
+    console.log("Empty");
+    ref.current.readSignature()
+  };
+
+  // Called after ref.current.clearSignature()
+  const handleClear = () => {
+    console.log("clear success!");
+    ref.current.clearSignature()
+    setSignature(null)
+  };
 
   return (
     <View style={styles.container}>
       <ScrollView
-        style={{  }}
-        contentContainerStyle={{ flex: 1, paddingTop: 40, paddingBottom: 20 }}
+        style={{}}
+        contentContainerStyle={{ flex: 1, paddingTop: 40, paddingBottom: 20,  }}
       >
-        <Text style={styles.header}>Signature</Text>
-        <Text style={styles.paragraph}>
-          This signature will be used as proof of authenticity for your artwork.
-        </Text>
-        
-        {/* Signature Capture Component */}
-        <SignatureView
-          style={{
-            borderWidth: 2,
-            flex: 1,
-          }}
-          ref={signatureRef}
-          // onSave is automatically called whenever signature-pad onEnd is called and saveSignature is called
-          onSave={(val) => {
-            console.log("Saved signature:", val);
-            setSignature(val); // Correct function to update signature state
-          }}
-          onClear={() => {
-            console.log("Cleared signature");
-            setSignature(""); // Correct function to clear signature
-          }}
-        />
-
-        {/* Clear and Save Signature Actions */}
-        <View style={{ flexDirection: "row", justifyContent: "center", height: 50 }}>
-          <TouchableOpacity
-            style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
-            onPress={() => signatureRef.current.clearSignature()}
-          >
-            <Text style={{ color: "white" }}>Clear</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
-            onPress={() => signatureRef.current.saveSignature()}
-          >
-            <Text style={{ color: "white" }}>Save</Text>
-          </TouchableOpacity>
+        <View>
+          <Text style={styles.header}>Signature</Text>
+          <Text style={styles.paragraph}>
+            This signature will be used as proof of authenticity for your artwork.
+          </Text>
         </View>
 
-        {/* Upload Signature Button */}
-        <TouchableOpacity
-          style={[styles.button, { marginVertical: 20, marginHorizontal: 20 }]}
-          onPress={writeUserData}
-        >
-          <Text style={styles.smallerButtonText}>UPLOAD SIGNATURE</Text>
-        </TouchableOpacity>
+        <View style={{ top: 20 }}>
+          {/* Signature Capture Component */}
+          <View style={{ height: 300 }}>
+            <SignatureScreen
+              ref={ref}
+              onOK={handleOK}
+              // overlayHeight={'5000px'}
+              webStyle={`
+            .m-signature-pad { border: 1px solid black; background-color: #f0f0f0;}
+            .m-signature-pad--footer {display: none; margin: 0px; height: 5px}
+          `}
+            />
+          </View>
+
+
+          {/* Clear and Save Signature Actions */}
+          <View style={{ flexDirection: "row", justifyContent: "center", height: 50, top: 0 }}>
+            {/* <Button title="Clear" onPress={handleClear} />
+          <Button title="Confirm" onPress={handleSave} /> */}
+            <TouchableOpacity
+              style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
+              onPress={() => handleClear()}
+            >
+              <Text style={{ color: "white" }}>Clear</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
+              onPress={() => handleSave()}
+            >
+              <Text style={{ color: "white" }}>Okay</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+
 
         {/* Continue Button */}
         <TouchableOpacity
           style={styles.continueButton}
-          onPress={() => navigation.navigate("Payment")}
+          onPress={() => writeUserData()}
         >
           <Text style={styles.buttonText}>Continue</Text>
         </TouchableOpacity>
@@ -123,6 +143,8 @@ const styles = StyleSheet.create({
   },
 
   continueButton: {
+    position: 'absolute',
+    bottom: 20,
     backgroundColor: "#CEB89E",
     height: 50,
     borderRadius: 15,

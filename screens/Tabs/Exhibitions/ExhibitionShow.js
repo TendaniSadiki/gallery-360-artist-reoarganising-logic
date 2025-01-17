@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome"; 
-import Carousel from "react-native-snap-carousel"; 
+import Carousel from 'react-native-reanimated-carousel'; 
 import { useFetchProfileData } from "../../../hooks/useFetchProfileData.jsx";
 
 // Utility function to format date
@@ -97,6 +97,7 @@ const ExhibitionScreen = ({ navigation, route }) => {
           renderItem={({ item }) => (
             <Image source={{ uri: item.imgUrl }} style={styles.carouselImage} />
           )}
+          width={300}
           sliderWidth={300}
           itemWidth={160}
         />

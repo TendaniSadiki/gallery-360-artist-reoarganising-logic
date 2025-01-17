@@ -15,12 +15,11 @@ import useInput from "../../hooks/useDateTimePicker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { doc, setDoc } from "firebase/firestore";
 import { FIRESTORE_DB, FIREBASE_AUTH } from "../../firebase/firebase.config.js";
-import { showToast } from "../../hooks/useToast";
-// import MapView, { Marker } from "react-native-maps"; // Import MapView and Marker
+import MapView, { Marker } from "react-native-maps"; // Import MapView and Marker
 
 
-const SetupProfileScreen = ({ navigation }) => {
-
+const SetupProfileScreens = ({ navigation }) => {
+  
   const auth = FIREBASE_AUTH;
   const [fullName, setFullName] = useState("");
   const [contactNumber, setContactNumber] = useState("");
@@ -40,7 +39,7 @@ const SetupProfileScreen = ({ navigation }) => {
   const [instagram, setInstagram] = useState("");
   const [facebook, setFacebook] = useState("");
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); 
 
   const input = useInput();
   const { pickOneImage, image, imageUrl, video, videoUrl, progress, pickVideo } = useImageFunctions();
@@ -109,8 +108,8 @@ const SetupProfileScreen = ({ navigation }) => {
     return Object.keys(validationErrors).length === 0;
   };
 
-
-
+  
+  
   const handleSaveProfile = async () => {
     if (validateForm()) {
       try {
@@ -118,29 +117,7 @@ const SetupProfileScreen = ({ navigation }) => {
         if (user) {
           const uid = user.uid; // Get the user's UID
           console.log("User UID:", uid);
-          const place = `${streetAddress}, ${city}, ${province}, ${country}`
-          showToast(place)
-          
-          const result = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${place}&key=AIzaSyCprPVV3OJgeeEXYVZ0d3tyEK8QEAjVMpw`, {
-            method: 'POST'
-          })
-          if (!result.ok) {
-            showToast('An error occurred while setting address, please retry')
-            // setShowIndicator(false)
-            return
-          }
-          const data = (await result.json())
-          const res = data.results[0]
-          const coordinates = {
-            lat: res.geometry.location.lat,
-            lng: res.geometry.location.lng,
-          }
-          // console.log({ countryCode: res.address_components[6] });
-          // console.log({ provinceCode: res.address_components[5] });
 
-          const length = res.address_components.length
-          const countryCode = length > 7 ? res.address_components[6].short_name : res.address_components[4].short_name
-          const provinceCode = length > 7 ? res.address_components[5].short_name : res.address_components[3].short_name
           // Define the user data to save
           const userData = {
             fullname: fullName,
@@ -154,10 +131,8 @@ const SetupProfileScreen = ({ navigation }) => {
               type: type,
               zone: zone,
               country: country,
-              latitude: coordinates.lat,
-              longitude: coordinates.lng,
-              countryCode: countryCode,
-              provinceCode: provinceCode
+              latitude: latitude,
+              longitude: longitude,
             },
             websiteurl: website,
             dateofbirth: input.date ? input.date.toLocaleDateString() : "",
@@ -285,8 +260,8 @@ const SetupProfileScreen = ({ navigation }) => {
             keyboardType="numeric"
           />
           {errors.contactNumber && <Text style={styles.errorMessage}>{errors.contactNumber}</Text>}
-          <View style={styles.mapContainer}>
-            {/* <MapView
+           <View style={styles.mapContainer}>
+            <MapView
               style={styles.map}
               initialRegion={{
                 latitude: latitude || -34.9285, // Default coordinates if latitude is not set
@@ -297,103 +272,103 @@ const SetupProfileScreen = ({ navigation }) => {
               onRegionChangeComplete={onRegionChange}
             >
               {latitude && longitude && <Marker coordinate={{ latitude, longitude }} />}
-            </MapView> */}
+            </MapView>
           </View>
           <TextInput
-            style={styles.input}
-            placeholder="STREET ADDRESS"
-            placeholderTextColor="white"
-            value={streetAddress}
-            onChangeText={(text) => {
-              setErrors({});
-              setStreetAddress(text);
-            }}
-          />
-          {errors.streetAddress && <Text style={styles.errorMessage}>{errors.streetAddress}</Text>}
+          style={styles.input}
+          placeholder="STREET ADDRESS"
+          placeholderTextColor="white"
+          value={streetAddress}
+          onChangeText={(text) => {
+            setErrors({});
+            setStreetAddress(text);
+          }}
+        />
+        {errors.streetAddress && <Text style={styles.errorMessage}>{errors.streetAddress}</Text>}
 
-          <TextInput
-            style={styles.input}
-            placeholder="CITY / SUBURB"
-            placeholderTextColor="white"
-            value={city}
-            onChangeText={(text) => {
-              setErrors({});
-              setCity(text);
-            }}
-          />
-          {errors.city && <Text style={styles.errorMessage}>{errors.city}</Text>}
+        <TextInput
+          style={styles.input}
+          placeholder="CITY / SUBURB"
+          placeholderTextColor="white"
+          value={city}
+          onChangeText={(text) => {
+            setErrors({});
+            setCity(text);
+          }}
+        />
+        {errors.city && <Text style={styles.errorMessage}>{errors.city}</Text>}
 
-          <TextInput
-            style={styles.input}
-            placeholder="PROVINCE"
-            placeholderTextColor="white"
-            value={province}
-            onChangeText={(text) => {
-              setErrors({});
-              setProvince(text);
-            }}
-          />
-          {errors.province && <Text style={styles.errorMessage}>{errors.province}</Text>}
+        <TextInput
+          style={styles.input}
+          placeholder="PROVINCE"
+          placeholderTextColor="white"
+          value={province}
+          onChangeText={(text) => {
+            setErrors({});
+            setProvince(text);
+          }}
+        />
+        {errors.province && <Text style={styles.errorMessage}>{errors.province}</Text>}
 
-          <TextInput
-            style={styles.input}
-            placeholder="POSTAL CODE"
-            placeholderTextColor="white"
-            value={postalCode}
-            onChangeText={(text) => {
-              setErrors({});
-              setPostalCode(text);
-            }}
-            keyboardType="numeric"
-          />
-          {errors.postalCode && <Text style={styles.errorMessage}>{errors.postalCode}</Text>}
-          <TextInput
-            style={styles.input}
-            placeholder="LOCAL AREA"
-            placeholderTextColor="white"
-            value={localArea}
-            onChangeText={(text) => {
-              setErrors({});
-              setLocalArea(text);
-            }}
-          />
-          {errors.localArea && <Text style={styles.errorMessage}>{errors.localArea}</Text>}
+        <TextInput
+          style={styles.input}
+          placeholder="POSTAL CODE"
+          placeholderTextColor="white"
+          value={postalCode}
+          onChangeText={(text) => {
+            setErrors({});
+            setPostalCode(text);
+          }}
+          keyboardType="numeric"
+        />
+        {errors.postalCode && <Text style={styles.errorMessage}>{errors.postalCode}</Text>}
+        <TextInput
+          style={styles.input}
+          placeholder="LOCAL AREA"
+          placeholderTextColor="white"
+          value={localArea}
+          onChangeText={(text) => {
+            setErrors({});
+            setLocalArea(text);
+          }}
+        />
+        {errors.localArea && <Text style={styles.errorMessage}>{errors.localArea}</Text>}
 
-          <TextInput
-            style={styles.input}
-            placeholder="TYPE"
-            placeholderTextColor="white"
-            value={type}
-            onChangeText={(text) => {
-              setErrors({});
-              setType(text);
-            }}
-          />
-          {errors.type && <Text style={styles.errorMessage}>{errors.type}</Text>}
+        <TextInput
+          style={styles.input}
+          placeholder="TYPE"
+          placeholderTextColor="white"
+          value={type}
+          onChangeText={(text) => {
+            setErrors({});
+            setType(text);
+          }}
+        />
+        {errors.type && <Text style={styles.errorMessage}>{errors.type}</Text>}
 
-          <TextInput
-            style={styles.input}
-            placeholder="ZONE"
-            placeholderTextColor="white"
-            value={zone}
-            onChangeText={(text) => {
-              setErrors({});
-              setZone(text);
-            }}
-          />
-          {errors.zone && <Text style={styles.errorMessage}>{errors.zone}</Text>}
+        <TextInput
+          style={styles.input}
+          placeholder="ZONE"
+          placeholderTextColor="white"
+          value={zone}
+          onChangeText={(text) => {
+            setErrors({});
+            setZone(text);
+          }}
+        />
+        {errors.zone && <Text style={styles.errorMessage}>{errors.zone}</Text>}
 
-          <TextInput
-            style={styles.input}
-            placeholder="COUNTRY"
-            placeholderTextColor="white"
-            value={country}
-            onChangeText={(text) => {
-              setErrors({});
-              setCountry(text);
-            }}
-          />
-          {errors.country && <Text style={styles.errorMessage}>{errors.country}</Text>}
+        <TextInput
+          style={styles.input}
+          placeholder="COUNTRY"
+          placeholderTextColor="white"
+          value={country}
+          onChangeText={(text) => {
+            setErrors({});
+            setCountry(text);
+          }}
+        />
+        {errors.country && <Text style={styles.errorMessage}>{errors.country}</Text>}
 
           <TextInput
             style={styles.input}
@@ -540,7 +515,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   mapContainer: {
-    height: 0, // Adjust height as needed
+    height: 300, // Adjust height as needed
     marginVertical: 20,
   },
   map: {
@@ -549,4 +524,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SetupProfileScreen;
+export default SetupProfileScreens;

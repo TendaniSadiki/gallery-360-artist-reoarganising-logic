@@ -19,6 +19,12 @@ const ProfileCard = ({ data }) => {
         >
           <Text style={styles.addButtonText}>{data.btnText}</Text>
         </TouchableOpacity>
+        {/* <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate('Signature')}
+        >
+          <Text style={styles.addButtonText}>{'Sign'}</Text>
+        </TouchableOpacity> */}
       </View>
     </View>
   );

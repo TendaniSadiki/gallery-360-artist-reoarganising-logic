@@ -1,7 +1,7 @@
 {
   "cli": {
     "version": ">= 5.2.0",
-    "appVersionSource": "remote"  // Add this line to avoid the warning about cli.appVersionSource
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {

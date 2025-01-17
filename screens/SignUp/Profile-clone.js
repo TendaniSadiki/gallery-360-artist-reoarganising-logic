@@ -9,19 +9,16 @@ import {
   ScrollView,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
-import AddSocialMedia from "./AddSocialMedia";
 import { useImageFunctions } from "../../hooks/useImageFunctions";
-import useInput from "../../hooks/useDateTimePicker";
+import AddSocialMedia from "./AddSocialMedia";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { doc, setDoc } from "firebase/firestore";
-import { FIRESTORE_DB, FIREBASE_AUTH } from "../../firebase/firebase.config.js";
-import { showToast } from "../../hooks/useToast";
-// import MapView, { Marker } from "react-native-maps"; // Import MapView and Marker
+
+import useInput from "../../hooks/useDateTimePicker";
 
 
-const SetupProfileScreen = ({ navigation }) => {
 
-  const auth = FIREBASE_AUTH;
+const SetupProfileScreenClone = ({ navigation }) => {
+
   const [fullName, setFullName] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [streetAddress, setStreetAddress] = useState("");
@@ -50,139 +47,12 @@ const SetupProfileScreen = ({ navigation }) => {
     setLongitude(region.longitude);
   };
   const validateForm = () => {
-    let validationErrors = {};
-
-    // Full Name Validation
-    if (!/^[a-zA-Z]+ [a-zA-Z]+$/.test(fullName.trim())) {
-      validationErrors.fullName = "Please enter a valid full name (e.g., John Doe)";
-    }
-
-    // Contact Number Validation
-    if (!/^\d{10}$/.test(contactNumber)) {
-      validationErrors.contactNumber = "Please enter a valid contact number (10 digits)";
-    }
-
-    // Physical Address Validation
-    if (!streetAddress.trim()) {
-      validationErrors.streetAddress = "Street address is required";
-    }
-    if (!city.trim()) {
-      validationErrors.city = "City or suburb is required";
-    }
-    if (!province.trim()) {
-      validationErrors.province = "Province is required";
-    }
-    if (!/^\d{4}$/.test(postalCode)) {
-      validationErrors.postalCode = "Please enter a valid 4-digit postal code";
-    }
-    if (!localArea.trim()) {
-      validationErrors.localArea = "Local area is required";
-    }
-    if (!type.trim()) {
-      validationErrors.type = "Type is required";
-    }
-    if (!zone.trim()) {
-      validationErrors.zone = "Zone is required";
-    }
-    if (!country.trim()) {
-      validationErrors.country = "Country is required";
-    }
-    // Website URL Validation
-    if (website && !/^(http|https):\/\/[^\s]+/.test(website)) {
-      validationErrors.website = "Please enter a valid website URL (starting with http or https)";
-    }
-
-    // Profile Image Validation
-    if (!image) {
-      validationErrors.image = "Profile image is required";
-      console.log("Image is not defined");
-    }
-
-    // Date of Birth Validation
-    if (!input.date) {
-      validationErrors.dateOfBirth = "Please select your date of birth";
-      console.log("Date:", input.date);
-
-    }
-
-    setErrors(validationErrors);
-    return Object.keys(validationErrors).length === 0;
   };
 
 
 
   const handleSaveProfile = async () => {
-    if (validateForm()) {
-      try {
-        const user = auth.currentUser; // Get the current user
-        if (user) {
-          const uid = user.uid; // Get the user's UID
-          console.log("User UID:", uid);
-          const place = `${streetAddress}, ${city}, ${province}, ${country}`
-          showToast(place)
-          
-          const result = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${place}&key=AIzaSyCprPVV3OJgeeEXYVZ0d3tyEK8QEAjVMpw`, {
-            method: 'POST'
-          })
-          if (!result.ok) {
-            showToast('An error occurred while setting address, please retry')
-            // setShowIndicator(false)
-            return
-          }
-          const data = (await result.json())
-          const res = data.results[0]
-          const coordinates = {
-            lat: res.geometry.location.lat,
-            lng: res.geometry.location.lng,
-          }
-          // console.log({ countryCode: res.address_components[6] });
-          // console.log({ provinceCode: res.address_components[5] });
 
-          const length = res.address_components.length
-          const countryCode = length > 7 ? res.address_components[6].short_name : res.address_components[4].short_name
-          const provinceCode = length > 7 ? res.address_components[5].short_name : res.address_components[3].short_name
-          // Define the user data to save
-          const userData = {
-            fullname: fullName,
-            contactnumber: contactNumber,
-            address: {
-              street: streetAddress,
-              city: city,
-              province: province,
-              postalCode: postalCode,
-              localArea: localArea,
-              type: type,
-              zone: zone,
-              country: country,
-              latitude: coordinates.lat,
-              longitude: coordinates.lng,
-              countryCode: countryCode,
-              provinceCode: provinceCode
-            },
-            websiteurl: website,
-            dateofbirth: input.date ? input.date.toLocaleDateString() : "",
-            biography: bio,
-            imageUrl: imageUrl || "",  // Ensure it's not undefined
-            facebook: facebook || "",  // Ensure it's not undefined
-            instagram: instagram || "",  // Ensure it's not undefined
-            videoUrl: videoUrl || "",
-          };
-          console.log("User Data:", userData);
-
-          // Save the profile data to Firestore
-          const userDocRef = doc(FIRESTORE_DB, "artists", uid);
-          await setDoc(userDocRef, userData);
-
-          // Navigate to the Artwork screen, passing userData
-          navigation.navigate("Artwork", { userData });
-        } else {
-          console.log("User is not authenticated");
-          navigation.navigate("Login");
-        }
-      } catch (error) {
-        console.error("Error saving profile:", error);
-      }
-    }
   };
 
   const handleOpenModal = () => setModalIsVisible(true);
@@ -212,6 +82,9 @@ const SetupProfileScreen = ({ navigation }) => {
               }}
             />
             <TouchableOpacity onPress={pickOneImage}>
+              
+
+
               <Icon
                 name="camera"
                 size={20}
@@ -412,7 +285,7 @@ const SetupProfileScreen = ({ navigation }) => {
             style={styles.input}
             placeholder="DATE OF BIRTH"
             placeholderTextColor="white"
-            value={input.date ? input.date.toLocaleDateString() : ""}
+            // value={input.date ? input.date.toLocaleDateString() : ""} 'Is it not '
             onPressIn={input.showDatepicker}
           />
           {input.show && (
@@ -540,7 +413,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   mapContainer: {
-    height: 0, // Adjust height as needed
+    height: 300, // Adjust height as needed
     marginVertical: 20,
   },
   map: {
@@ -549,4 +422,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SetupProfileScreen;
+export default SetupProfileScreenClone;

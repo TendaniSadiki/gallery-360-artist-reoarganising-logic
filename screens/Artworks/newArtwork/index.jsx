@@ -10,7 +10,7 @@ import {
   ScrollView,
   Switch,
 } from "react-native";
-import Carousel from "react-native-snap-carousel"; // Import the library for the carousel.
+import Carousel from 'react-native-reanimated-carousel'; // Import the library for the carousel.
 import Icon from "react-native-vector-icons/FontAwesome5";
 import { FIRESTORE_DB, storage, FIREBASE_AUTH } from "../../../firebase/firebase.config";
 
@@ -241,6 +241,7 @@ function validateArtwork() {
         renderItem={({ item }) => (
           <Image source={{ uri: item.uri }} style={styles.carouselImage} />
         )}
+        width={300}
         sliderWidth={300}
         itemWidth={160}
       />

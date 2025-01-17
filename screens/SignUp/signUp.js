@@ -15,6 +15,7 @@ import auth from "../../firebase/firebase.config.js";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import ActionButton from "../../components/ActionButton.jsx";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { showToast } from "../../hooks/useToast.jsx";
 export default function App({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,137 +55,116 @@ export default function App({ navigation }) {
   const handleSignUp = async () => {
     setIsLoading(true);
     if (validateForm()) {
-      try {
-        const response = await createUserWithEmailAndPassword(auth, email, password);
-        const user = response.user;
-        setIsLoading(false);
-
-        // Navigate to Profile page on successful registration
-        navigation.navigate("Profile");
-        setEmail("");
-        setPassword("");
-        setErrors({});
-      } catch (error) {
-        console.log("Sign-up error:", error);
-        setIsLoading(false);
-
-        // Handle Firebase's email already in use error
-        if (error.code === "auth/email-already-in-use") {
-          setErrors({ ...errors, email: "This email is already in use. Please try another one." });
-        } else {
-          alert("An error occurred during sign-up. Please try again.");
-        }
-      }
-    } else {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        navigation.navigate("Profile");
-      }
-    });
-
-    
-    
-    return () => unsubscribe();
-  }, [navigation]);
+      console.log({ email, password });
+      // setIsLoading(false);
+      // return
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(userCredentials => {
+          console.log({ userCredentials });
+          const user = userCredentials.user
+          setIsLoading(false)
+          showToast(`Hi ${user.email}`)
+          navigation.navigate('Profile')
+        }).catch(err => {
+          showToast('Error occurred')
+          setIsLoading(false)
+        })
+    };
+  }
   return (
     <View style={styles.container}>
-        <ScrollView>
-          <View style={styles.imageContainer}>
-            <Image
-              style={{ width: 200, height: 200, alignSelf: "center" }}
-              source={require("../../assets/images/gallery36.png")}
-            />
+      <ScrollView>
+        <View style={styles.imageContainer}>
+          <Image
+            style={{ width: 200, height: 200, alignSelf: "center" }}
+            source={require("../../assets/images/gallery36.png")}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.header}>Sign Up</Text>
+          <View style={styles.accountLoginContainer}>
+            <Text style={styles.smallerText}> create your new account</Text>
+            <View style={styles.iconContainer}>
+              <Icon
+                name="google"
+                size={20}
+                style={{ paddingRight: 20 }}
+                color="gray"
+              />
+              <Icon name="facebook" size={20} color="gray" />
+            </View>
           </View>
-          <View style={styles.inputContainer}>
-            <Text style={styles.header}>Sign Up</Text>
-            <View style={styles.accountLoginContainer}>
-              <Text style={styles.smallerText}> create your new account</Text>
-              <View style={styles.iconContainer}>
-                <Icon
-                  name="google"
-                  size={20}
-                  style={{ paddingRight: 20 }}
-                  color="gray"
-                />
-                <Icon name="facebook" size={20} color="gray" />
-              </View>
-            </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="white"
-              value={email}
-              onChangeText={(text) => {
-                setErrors({});
-                setEmail(text);
-              }}
-              editable={!isLoading}
-            />
-            {errors.email ? (
-              <Text style={styles.errorMessage}>{errors.email}</Text>
-            ) : null}
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="white"
-              secureTextEntry={true}
-              value={password}
-              onChangeText={(text) => {
-                setErrors({});
-                setPassword(text);
-              }}
-              editable={!isLoading}
-            />
-            {errors.password ? (
-              <Text style={styles.errorMessage}>{errors.password}</Text>
-            ) : null}
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="white"
+            value={email}
+            onChangeText={(text) => {
+              setErrors({});
+              setEmail(text);
+            }}
+            editable={!isLoading}
+          />
+          {errors.email ? (
+            <Text style={styles.errorMessage}>{errors.email}</Text>
+          ) : null}
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="white"
+            secureTextEntry={true}
+            value={password}
+            onChangeText={(text) => {
+              setErrors({});
+              setPassword(text);
+            }}
+            editable={!isLoading}
+          />
+          {errors.password ? (
+            <Text style={styles.errorMessage}>{errors.password}</Text>
+          ) : null}
 
-            <View style={[styles.Items, styles.checkboxContainer]}>
-              <TouchableOpacity
-                style={[
-                  artistAgreesToTerms && styles.selectedCheckbox
-                ]}
-                onPress={() => handleTermAgreementToggle()}
-                disabled={isLoading}
-              >
-                <View style={styles.checkbox}>
-                  {artistAgreesToTerms && (
-                    <Icon name="check" size={14} color="white" />
-                  )}
-                </View>
-              </TouchableOpacity>
-              <Text
-                //  key={index}
-                style={[
-                  styles.checkboxText,
-                  artistAgreesToTerms && styles.selectedText,
-                ]}
-                
-              >
-                {G360_TERMS}
-              </Text>
-            </View>
-            <ActionButton
-              handleOnPress={handleSignUp}
-              isLoading={isLoading}
-              text="Sign Up"
-            />
+          <View style={[styles.Items, styles.checkboxContainer]}>
             <TouchableOpacity
-              style={styles.button}
-              onPress={() => navigation.navigate("Login")}
+              style={[
+                artistAgreesToTerms && styles.selectedCheckbox
+              ]}
+              onPress={() => handleTermAgreementToggle()}
               disabled={isLoading}
             >
-              <Text style={styles.smallerButtonText}>
-                Already have an account?
-              </Text>
+              <View style={styles.checkbox}>
+                {artistAgreesToTerms && (
+                  <Icon name="check" size={14} color="white" />
+                )}
+              </View>
             </TouchableOpacity>
+            <Text
+              //  key={index}
+              style={[
+                styles.checkboxText,
+                artistAgreesToTerms && styles.selectedText,
+              ]}
+
+            >
+              {G360_TERMS}
+            </Text>
           </View>
-        </ScrollView>
+          <ActionButton
+            handleOnPress={handleSignUp}
+            isLoading={isLoading}
+            text="Sign Up"
+          />
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("Login")}
+            disabled={isLoading}
+          >
+            <Text style={styles.smallerButtonText}>
+              Already have an account?
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 }

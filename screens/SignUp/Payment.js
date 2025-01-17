@@ -13,6 +13,7 @@ import { setDoc, doc } from "firebase/firestore";
 import { FIRESTORE_DB, FIREBASE_AUTH } from "../../firebase/firebase.config";
 import { sendEmailVerification } from "firebase/auth";
 import { useDocumentFunctions } from "../../hooks/useDocumentFunctions";
+import { showToast } from "../../hooks/useToast";
 
 const PaymentScreen = ({ navigation }) => {
   const auth = FIREBASE_AUTH;
@@ -77,14 +78,14 @@ const PaymentScreen = ({ navigation }) => {
       // Send email verification if needed
       if (user && !user.emailVerified) {
         await sendEmailVerification(user);
-        alert("Email verification sent. Please check your inbox.");
+        showToast("Email verification sent. Please check your inbox.");
       }
 
       // Navigate to login
       navigation.dispatch(StackActions.replace("Login"));
     } catch (error) {
       console.error("Error saving account info: ", error);
-      alert("Error saving account info. Please try again.");
+      showToast("Error saving account info. Please try again.");
     }
   };
 

@@ -7,10 +7,11 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { STORAGE } from "../firebase/firebase.config"; // Ensure STORAGE is imported from your config
+import { showToast } from "./useToast";
 
 export const useImageFunctions = () => {
   const [image, setImage] = useState("");
-  const [imageUrl, setImageUrl] = useState();
+  const [imageUrl, setImageUrl] = useState("");
   const [images, setImages] = useState([]);
   const [imagesUrls, setImagesUrls] = useState([]);
   const [video, setVideo] = useState(null);
@@ -18,37 +19,44 @@ export const useImageFunctions = () => {
   const [document, setDocument] = useState(null);
   const [documentUrl, setDocumentUrl] = useState("");
   const [progress, setProgress] = useState(0);
-
+// SIYQ8sTli$$Er4Q
   async function uploadImage(uri, folder) {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    const storageRef = ref(STORAGE, `${folder}/` + new Date().getTime());
-    const uploadTask = uploadBytesResumable(storageRef, blob);
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const uploadProgress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        console.log("Upload is " + uploadProgress + "% done");
-        setProgress(uploadProgress.toFixed());
-      },
-      (error) => {
-        console.error("Upload Error: ", error);
-        alert("Upload Error: " + error.message);
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          console.log("File available at", downloadURL);
-          if (folder === "Artworks") {
-            const newImageUrl = { imgUrl: downloadURL, default: imagesUrls.length === 0 };
-            setImagesUrls((prevUrls) => [...prevUrls, newImageUrl]);
-            setImageUrl(downloadURL);
-          } else if (folder === "Profile") {
-            setVideoUrl(downloadURL);
-          }
-        });
-      }
-    );
+    try {
+      // showToast('about to init image')
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const storageRef = ref(STORAGE, `${folder}/` + new Date().getTime());
+      const uploadTask = uploadBytesResumable(storageRef, blob);
+      // showToast('about to upload image')
+      // return
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const uploadProgress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log("Upload is " + uploadProgress + "% done");
+          setProgress(uploadProgress.toFixed());
+        },
+        (error) => {
+          console.error("Upload Error: ", error);
+          showToast("Upload Error: " + error.message);
+        },
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            console.log("File available at", downloadURL);
+            if (folder === "Artworks") {
+              const newImageUrl = { imgUrl: downloadURL, default: imagesUrls.length === 0 };
+              setImagesUrls((prevUrls) => [...prevUrls, newImageUrl]);
+              setImageUrl(downloadURL);
+            } else if (folder === "Profile") {
+              setVideoUrl(downloadURL);
+            }
+          });
+        }
+      );
+    } catch (error) {
+      console.log(error);
+      showToast(JSON.stringify(error))
+    }
   }
 
   async function pickMultipleImages() {
@@ -73,8 +81,10 @@ export const useImageFunctions = () => {
     });
 
     if (!result.canceled) {
-      const source = { uri: result.assets[0].uri };
+      const source = result.assets[0].uri;
       setImage(source);
+      // showToast(source)
+      // return
       await uploadImage(result.assets[0].uri, "Artworks");
     }
   }
