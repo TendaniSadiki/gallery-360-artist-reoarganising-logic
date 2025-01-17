@@ -97,6 +97,7 @@ const ExhibitionScreen = ({ navigation, route }) => {
           renderItem={({ item }) => (
             <Image source={{ uri: item.imgUrl }} style={styles.carouselImage} />
           )}
+          width={300}
           sliderWidth={300}
           itemWidth={160}
         />

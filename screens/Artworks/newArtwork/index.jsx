@@ -241,6 +241,7 @@ function validateArtwork() {
         renderItem={({ item }) => (
           <Image source={{ uri: item.uri }} style={styles.carouselImage} />
         )}
+        width={300}
         sliderWidth={300}
         itemWidth={160}
       />
