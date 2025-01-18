@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5"; // Replace "FontAwesome5" with the icon library of your choice.
 import {FIREBASE_AUTH, FIRESTORE_DB } from "../../firebase/firebase.config";
@@ -41,6 +42,7 @@ const MyPage = ({ route, navigation }) => {
   const [query, setQuery] = useState("");
   const [selectedArtworks, setSelectedArtworks] = useState([]);
   const inputRef = useRef();
+  const [isErrorModalVisible, setErrorModalVisible] = useState(false);
 
   const { userData } = route.params; // Get userData passed from previous screen
 
@@ -62,6 +64,10 @@ const MyPage = ({ route, navigation }) => {
 
   // Function to save artwork selections along with existing user data to Firestore
   const handleSaveProfile = async () => {
+    if (selectedArtworks.length === 0) {
+      setErrorModalVisible(true);
+      return;
+    }
     try {
       const auth = FIREBASE_AUTH;
       const user = auth.currentUser; // Get the authenticated user
@@ -148,11 +154,24 @@ const MyPage = ({ route, navigation }) => {
       >
         <TouchableOpacity
           style={styles.continueButton}
-          onPress={() => navigation.navigate("Signature", { userData })}
+          onPress={handleSaveProfile}
         >
-          <Text style={styles.buttonText} onPress={handleSaveProfile}>Continue</Text>
+          <Text style={styles.buttonText}>Continue</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Error Modal */}
+      <Modal visible={isErrorModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.header}>Error</Text>
+            <Text style={styles.errorText}>Please select at least one artwork type.</Text>
+            <TouchableOpacity style={styles.button} onPress={() => setErrorModalVisible(false)}>
+              <Text style={styles.buttonText}>CLOSE</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -307,6 +326,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "80%",
+    padding: 20,
+    backgroundColor: "black",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 10,
+    textAlign: "center",
   },
 });
 

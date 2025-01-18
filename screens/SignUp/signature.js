@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   Button,
+  Modal,
 } from "react-native";
 // import { SignatureView } from "react-native-signature-capture-view";
 import SignatureScreen from "react-native-signature-canvas";
@@ -17,6 +18,7 @@ const MyPage = ({ route, navigation }) => {
   const ref = useRef();
   const auth = FIREBASE_AUTH;
   const [signature, setSignature] = useState(""); // Holds the captured signature
+  const [isErrorModalVisible, setErrorModalVisible] = useState(false);
   const user = auth.currentUser;
   console.log(auth);
   
@@ -26,7 +28,7 @@ const MyPage = ({ route, navigation }) => {
   // Function to save the signature in Firestore
   const writeUserData = () => {
     if (!signature) {
-      Alert.alert("Please capture your signature before uploading.");
+      setErrorModalVisible(true);
       return;
     }
 
@@ -125,6 +127,24 @@ const MyPage = ({ route, navigation }) => {
           <Text style={styles.buttonText}>Continue</Text>
         </TouchableOpacity>
       </ScrollView>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isErrorModalVisible}
+        onRequestClose={() => {
+          setErrorModalVisible(!isErrorModalVisible);
+        }}
+      >
+        <View style={styles.modalView}>
+          <Text style={styles.modalText}>Please capture your signature before uploading.</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setErrorModalVisible(!isErrorModalVisible)}
+          >
+            <Text style={styles.buttonText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -180,6 +200,25 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: "white",
     paddingHorizontal: 20,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center"
   },
 });
 

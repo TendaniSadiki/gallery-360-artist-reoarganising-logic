@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,10 @@ import { useFetchAccountData } from "../../../hooks/useFetchAccountData"; // Cus
 const SetupProfileScreen = ({ navigation }) => {
   const { userData, name, image, dateOfBirth, bio, signature } = useFetchProfileData();
   const { accountHolder, accountNumber, bankName, branchCode, documentUrl } = useFetchAccountData();
+
+  useEffect(() => {
+    // Reload updated info when the component mounts or updates
+  }, [userData, name, image, dateOfBirth, bio, signature, accountHolder, accountNumber, bankName, branchCode, documentUrl]);
 
   const handleSignOut = async () => {
     try {

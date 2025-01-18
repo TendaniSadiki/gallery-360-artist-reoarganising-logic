@@ -8,6 +8,7 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 //import ForgetPassword from "../SignIn/ForgetPassword";
@@ -22,7 +23,8 @@ export default function App({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
   const [errors, setErrors] = useState({});
-  const [artistAgreesToTerms, setArtistAgreesToTerms] = useState(false)
+  const [artistAgreesToTerms, setArtistAgreesToTerms] = useState(false);
+  const [isErrorModalVisible, setErrorModalVisible] = useState(false);
 
   const G360_TERMS = "I agree to Gallery360's Terms & Conditions";
 
@@ -69,7 +71,10 @@ export default function App({ navigation }) {
           showToast('Error occurred')
           setIsLoading(false)
         })
-    };
+    } else {
+      setIsLoading(false);
+      setErrorModalVisible(true);
+    }
   }
   return (
     <View style={styles.container}>
@@ -165,6 +170,20 @@ export default function App({ navigation }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Error Modal */}
+      <Modal visible={isErrorModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.header}>Error</Text>
+            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+            <TouchableOpacity style={styles.button} onPress={() => setErrorModalVisible(false)}>
+              <Text style={styles.buttonText}>CLOSE</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -301,5 +320,24 @@ const styles = StyleSheet.create({
     color: "rgb(220, 80, 90)",
     marginBottom: 10,
     textAlign: "left",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "80%",
+    padding: 20,
+    backgroundColor: "black",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 10,
+    textAlign: "center",
   },
 });

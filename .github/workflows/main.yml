@@ -35,11 +35,16 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      - name: Patch build.gradle files
+        run: |
+          find . -name "build.gradle" -exec sed -i 's/useCoreDependencies()//g' {} +
+          find . -name "build.gradle" -exec sed -i 's/compileSdkVersion.*/compileSdkVersion 30/g' {} +
+
       # Android APK Build
       - name: Build Android APK
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: Eas build --platform android --profile preview
+        run: eas build -p android --profile production --non-interactive --wait
 
       - name: Display Build Logs
         if: failure()

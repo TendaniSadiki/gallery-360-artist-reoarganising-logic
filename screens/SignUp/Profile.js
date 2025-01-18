@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Image,
   ScrollView,
+  Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import AddSocialMedia from "./AddSocialMedia";
@@ -41,6 +42,7 @@ const SetupProfileScreen = ({ navigation }) => {
   const [facebook, setFacebook] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [isErrorModalVisible, setErrorModalVisible] = useState(false);
 
   const input = useInput();
   const { pickOneImage, image, imageUrl, video, videoUrl, progress, pickVideo } = useImageFunctions();
@@ -79,7 +81,7 @@ const SetupProfileScreen = ({ navigation }) => {
       validationErrors.localArea = "Local area is required";
     }
     if (!type.trim()) {
-      validationErrors.type = "Type is required";
+      validationErrors.type = "Type of business is required";
     }
     if (!zone.trim()) {
       validationErrors.zone = "Zone is required";
@@ -182,6 +184,8 @@ const SetupProfileScreen = ({ navigation }) => {
       } catch (error) {
         console.error("Error saving profile:", error);
       }
+    } else {
+      setErrorModalVisible(true);
     }
   };
 
@@ -361,7 +365,7 @@ const SetupProfileScreen = ({ navigation }) => {
 
           <TextInput
             style={styles.input}
-            placeholder="TYPE"
+            placeholder="TYPE OF BUSINESS"
             placeholderTextColor="white"
             value={type}
             onChangeText={(text) => {
@@ -445,6 +449,31 @@ const SetupProfileScreen = ({ navigation }) => {
           <Text style={styles.buttonText}>Continue</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Error Modal */}
+      <Modal visible={isErrorModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.header}>Error</Text>
+            {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
+            {errors.contactNumber && <Text style={styles.errorText}>{errors.contactNumber}</Text>}
+            {errors.streetAddress && <Text style={styles.errorText}>{errors.streetAddress}</Text>}
+            {errors.city && <Text style={styles.errorText}>{errors.city}</Text>}
+            {errors.province && <Text style={styles.errorText}>{errors.province}</Text>}
+            {errors.postalCode && <Text style={styles.errorText}>{errors.postalCode}</Text>}
+            {errors.localArea && <Text style={styles.errorText}>{errors.localArea}</Text>}
+            {errors.type && <Text style={styles.errorText}>{errors.type}</Text>}
+            {errors.zone && <Text style={styles.errorText}>{errors.zone}</Text>}
+            {errors.country && <Text style={styles.errorText}>{errors.country}</Text>}
+            {errors.website && <Text style={styles.errorText}>{errors.website}</Text>}
+            {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
+            {errors.dateOfBirth && <Text style={styles.errorText}>{errors.dateOfBirth}</Text>}
+            <TouchableOpacity style={styles.button} onPress={() => setErrorModalVisible(false)}>
+              <Text style={styles.buttonText}>CLOSE</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -546,6 +575,25 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
     borderRadius: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "80%",
+    padding: 20,
+    backgroundColor: "black",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 10,
+    textAlign: "center",
   },
 });
 
