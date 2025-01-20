@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  ScrollView,
   Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
@@ -14,11 +13,12 @@ import AddSocialMedia from "./AddSocialMedia";
 import { useImageFunctions } from "../../hooks/useImageFunctions";
 import useInput from "../../hooks/useDateTimePicker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { FIRESTORE_DB, FIREBASE_AUTH } from "../../firebase/firebase.config.js";
 import { showToast } from "../../hooks/useToast";
-// import MapView, { Marker } from "react-native-maps"; // Import MapView and Marker
-
+import { countryOptions } from "./countries";
+import DropDownPicker from "react-native-dropdown-picker";
+import { FlatList } from "react-native";
 
 const SetupProfileScreen = ({ navigation }) => {
 
@@ -43,6 +43,9 @@ const SetupProfileScreen = ({ navigation }) => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [isErrorModalVisible, setErrorModalVisible] = useState(false);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [countryValue, setCountryValue] = useState(null);
+  const [filteredCountries, setFilteredCountries] = useState(countryOptions);
 
   const input = useInput();
   const { pickOneImage, image, imageUrl, video, videoUrl, progress, pickVideo } = useImageFunctions();
@@ -173,7 +176,7 @@ const SetupProfileScreen = ({ navigation }) => {
 
           // Save the profile data to Firestore
           const userDocRef = doc(FIRESTORE_DB, "artists", uid);
-          await setDoc(userDocRef, userData);
+          await updateDocD(userDocRef, userData);
 
           // Navigate to the Artwork screen, passing userData
           navigation.navigate("Artwork", { userData });
@@ -191,264 +194,298 @@ const SetupProfileScreen = ({ navigation }) => {
 
   const handleOpenModal = () => setModalIsVisible(true);
   const handleCloseModal = () => setModalIsVisible(false);
+  const handleCountrySearch = (text) => {
+    const filtered = countryOptions.filter((item) =>
+      item.label.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredCountries(filtered);
+  };
 
+  const renderForm = () => (
+    <View>
+      <View style={{ marginBottom: 90 }}>
+        <Text style={styles.header}>Setup Profile</Text>
+        <Text style={styles.smallerText}>
+          Once your profile is complete, you can start uploading your artwork.
+        </Text>
+      </View>
+
+      <View>
+        {/* Profile Image Section */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={image ? { uri: image } : require("../../assets/images/profile_image.jpg")}
+            style={{
+              width: 150,
+              height: 150,
+              alignSelf: "center",
+              borderRadius: 75,
+            }}
+          />
+          <TouchableOpacity onPress={pickOneImage}>
+            <Icon
+              name="camera"
+              size={20}
+              color="gray"
+              style={styles.cameraIcon}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Upload Progress */}
+        {progress !== 0 && (
+          <Text style={styles.smallerText}>
+            {progress < 100 ? `Uploading...${progress}%` : "Image Uploaded"}
+          </Text>
+        )}
+        {errors.image && <Text style={styles.errorMessage}>{errors.image}</Text>}
+
+        {/* Video Section */}
+        <Text style={styles.smallerText}>Please record a (5mb) video introducing yourself</Text>
+        {video && (
+          <Text style={{ color: "gray", fontSize: 14 }}>
+            {video.split("Picker/")[1]}
+          </Text>
+        )}
+        <TouchableOpacity style={styles.button} onPress={pickVideo}>
+          <Icon name="play" style={{ marginHorizontal: 12 }} size={20} color="white" />
+          <Text style={styles.smallerButtonText}>UPLOAD VIDEO</Text>
+        </TouchableOpacity>
+
+        {/* Social Media Section */}
+        <View style={styles.iconContainer}>
+          <TouchableOpacity onPress={handleOpenModal}>
+            <Icon name="facebook" size={25} style={styles.socialIcon} color="gray" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleOpenModal}>
+            <Icon name="instagram" size={25} style={styles.socialIcon} color="gray" />
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.button} onPress={handleOpenModal}>
+          <Icon name="plus" style={{ marginRight: 10 }} size={20} color="white" />
+          <Text style={styles.smallerButtonText}>ADD SOCIAL MEDIA</Text>
+        </TouchableOpacity>
+
+        <AddSocialMedia visible={modalIsVisible} closeModal={handleCloseModal} setLinks={{ setInstagram, setFacebook }} />
+      </View>
+
+      {/* Form Section */}
+      <View style={{ marginTop: 120 }}>
+        <TextInput
+          style={styles.input}
+          placeholder="FULL NAME"
+          placeholderTextColor="white"
+          value={fullName}
+          onChangeText={(text) => {
+            setErrors({});
+            setFullName(text);
+          }}
+        />
+        {errors.fullName && <Text style={styles.errorMessage}>{errors.fullName}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="CONTACT NUMBER"
+          placeholderTextColor="white"
+          value={contactNumber}
+          onChangeText={(text) => {
+            setErrors({});
+            setContactNumber(text);
+          }}
+          maxLength={10}
+          keyboardType="numeric"
+        />
+        {errors.contactNumber && <Text style={styles.errorMessage}>{errors.contactNumber}</Text>}
+        <View style={styles.mapContainer}>
+          {/* <MapView
+            style={styles.map}
+            initialRegion={{
+              latitude: latitude || -34.9285, // Default coordinates if latitude is not set
+              longitude: longitude || 138.6007, // Default coordinates if longitude is not set
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+            onRegionChangeComplete={onRegionChange}
+          >
+            {latitude && longitude && <Marker coordinate={{ latitude, longitude }} />}
+          </MapView> */}
+        </View>
+        <TextInput
+          style={styles.input}
+          placeholder="STREET ADDRESS"
+          placeholderTextColor="white"
+          value={streetAddress}
+          onChangeText={(text) => {
+            setErrors({});
+            setStreetAddress(text);
+          }}
+        />
+        {errors.streetAddress && <Text style={styles.errorMessage}>{errors.streetAddress}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="CITY / SUBURB"
+          placeholderTextColor="white"
+          value={city}
+          onChangeText={(text) => {
+            setErrors({});
+            setCity(text);
+          }}
+        />
+        {errors.city && <Text style={styles.errorMessage}>{errors.city}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="PROVINCE"
+          placeholderTextColor="white"
+          value={province}
+          onChangeText={(text) => {
+            setErrors({});
+            setProvince(text);
+          }}
+        />
+        {errors.province && <Text style={styles.errorMessage}>{errors.province}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="POSTAL CODE"
+          placeholderTextColor="white"
+          value={postalCode}
+          onChangeText={(text) => {
+            setErrors({});
+            setPostalCode(text);
+          }}
+          keyboardType="numeric"
+        />
+        {errors.postalCode && <Text style={styles.errorMessage}>{errors.postalCode}</Text>}
+        <TextInput
+          style={styles.input}
+          placeholder="LOCAL AREA"
+          placeholderTextColor="white"
+          value={localArea}
+          onChangeText={(text) => {
+            setErrors({});
+            setLocalArea(text);
+          }}
+        />
+        {errors.localArea && <Text style={styles.errorMessage}>{errors.localArea}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="TYPE OF BUSINESS"
+          placeholderTextColor="white"
+          value={type}
+          onChangeText={(text) => {
+            setErrors({});
+            setType(text);
+          }}
+        />
+        {errors.type && <Text style={styles.errorMessage}>{errors.type}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="ZONE"
+          placeholderTextColor="white"
+          value={zone}
+          onChangeText={(text) => {
+            setErrors({});
+            setZone(text);
+          }}
+        />
+        {errors.zone && <Text style={styles.errorMessage}>{errors.zone}</Text>}
+
+        <TextInput
+          style={styles.input}
+          placeholder="COUNTRY"
+          placeholderTextColor="white"
+          value={countryValue ? countryOptions.find(option => option.value === countryValue)?.label : country}
+          onChangeText={(text) => {
+            setErrors({});
+            setCountry(text);
+          }}
+        />
+        {errors.country && <Text style={styles.errorMessage}>{errors.country}</Text>}
+        <TextInput
+          style={styles.input}
+          placeholder="Search Country"
+          placeholderTextColor="white"
+          onChangeText={handleCountrySearch}
+        />
+        <DropDownPicker
+          open={countryOpen}
+          value={countryValue}
+          items={filteredCountries}
+          setOpen={setCountryOpen}
+          setValue={setCountryValue}
+          setItems={setFilteredCountries}
+          placeholder="Select Country"
+          containerStyle={{ marginBottom: 20 }}
+          style={{ backgroundColor: "gray" }}
+          dropDownStyle={{ backgroundColor: "black" }}
+          labelStyle={{ color: "white" }}
+          searchable={false}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="WEBSITE"
+          placeholderTextColor="white"
+          value={website}
+          onChangeText={(text) => {
+            setErrors({});
+            setWebsite(text);
+          }}
+        />
+        {errors.website && <Text style={styles.errorMessage}>{errors.website}</Text>}
+
+        {/* Date Picker */}
+        <TextInput
+          style={styles.input}
+          placeholder="DATE OF BIRTH"
+          placeholderTextColor="white"
+          value={input.date ? input.date.toLocaleDateString() : ""}
+          onPressIn={input.showDatepicker}
+        />
+        {input.show && (
+          <DateTimePicker
+            testID="dateTimePicker2"
+            value={input.date}
+            mode={input.mode}
+            is24Hour={true}
+            display="default"
+            onChange={input.onChange}
+          />
+        )}
+        {errors.dateOfBirth && <Text style={styles.errorMessage}>{errors.dateOfBirth}</Text>}
+
+        {/* Bio Section */}
+        <TextInput
+          style={styles.textArea}
+          placeholder="BIO"
+          placeholderTextColor="white"
+          value={bio}
+          onChangeText={(text) => {
+            setErrors({});
+            setBio(text);
+          }}
+          multiline
+        />
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      <ScrollView>
-        <View style={{ marginBottom: 90 }}>
-          <Text style={styles.header}>Setup Profile</Text>
-          <Text style={styles.smallerText}>
-            Once your profile is complete, you can start uploading your artwork.
-          </Text>
-        </View>
-
-        <View>
-          {/* Profile Image Section */}
-          <View style={styles.imageContainer}>
-            <Image
-              source={image ? { uri: image } : require("../../assets/images/profile_image.jpg")}
-              style={{
-                width: 150,
-                height: 150,
-                alignSelf: "center",
-                borderRadius: 75,
-              }}
-            />
-            <TouchableOpacity onPress={pickOneImage}>
-              <Icon
-                name="camera"
-                size={20}
-                color="gray"
-                style={styles.cameraIcon}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Upload Progress */}
-          {progress !== 0 && (
-            <Text style={styles.smallerText}>
-              {progress < 100 ? `Uploading...${progress}%` : "Image Uploaded"}
-            </Text>
-          )}
-          {errors.image && <Text style={styles.errorMessage}>{errors.image}</Text>}
-
-          {/* Video Section */}
-          <Text style={styles.smallerText}>Please record a (5mb) video introducing yourself</Text>
-          {video && (
-            <Text style={{ color: "gray", fontSize: 14 }}>
-              {video.split("Picker/")[1]}
-            </Text>
-          )}
-          <TouchableOpacity style={styles.button} onPress={pickVideo}>
-            <Icon name="play" style={{ marginHorizontal: 12 }} size={20} color="white" />
-            <Text style={styles.smallerButtonText}>UPLOAD VIDEO</Text>
+      <FlatList
+        data={[{ key: "form" }]}
+        renderItem={renderForm}
+        keyExtractor={(item) => item.key}
+        ListFooterComponent={
+          <TouchableOpacity style={styles.signInButton} onPress={handleSaveProfile}>
+            <Text style={styles.buttonText}>Continue</Text>
           </TouchableOpacity>
-
-          {/* Social Media Section */}
-          <View style={styles.iconContainer}>
-            <TouchableOpacity onPress={handleOpenModal}>
-              <Icon name="facebook" size={25} style={styles.socialIcon} color="gray" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleOpenModal}>
-              <Icon name="instagram" size={25} style={styles.socialIcon} color="gray" />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity style={styles.button} onPress={handleOpenModal}>
-            <Icon name="plus" style={{ marginRight: 10 }} size={20} color="white" />
-            <Text style={styles.smallerButtonText}>ADD SOCIAL MEDIA</Text>
-          </TouchableOpacity>
-
-          <AddSocialMedia visible={modalIsVisible} closeModal={handleCloseModal} setLinks={{ setInstagram, setFacebook }} />
-        </View>
-
-        {/* Form Section */}
-        <View style={{ marginTop: 120 }}>
-          <TextInput
-            style={styles.input}
-            placeholder="FULL NAME"
-            placeholderTextColor="white"
-            value={fullName}
-            onChangeText={(text) => {
-              setErrors({});
-              setFullName(text);
-            }}
-          />
-          {errors.fullName && <Text style={styles.errorMessage}>{errors.fullName}</Text>}
-
-          <TextInput
-            style={styles.input}
-            placeholder="CONTACT NUMBER"
-            placeholderTextColor="white"
-            value={contactNumber}
-            onChangeText={(text) => {
-              setErrors({});
-              setContactNumber(text);
-            }}
-            maxLength={10}
-            keyboardType="numeric"
-          />
-          {errors.contactNumber && <Text style={styles.errorMessage}>{errors.contactNumber}</Text>}
-          <View style={styles.mapContainer}>
-            {/* <MapView
-              style={styles.map}
-              initialRegion={{
-                latitude: latitude || -34.9285, // Default coordinates if latitude is not set
-                longitude: longitude || 138.6007, // Default coordinates if longitude is not set
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              }}
-              onRegionChangeComplete={onRegionChange}
-            >
-              {latitude && longitude && <Marker coordinate={{ latitude, longitude }} />}
-            </MapView> */}
-          </View>
-          <TextInput
-            style={styles.input}
-            placeholder="STREET ADDRESS"
-            placeholderTextColor="white"
-            value={streetAddress}
-            onChangeText={(text) => {
-              setErrors({});
-              setStreetAddress(text);
-            }}
-          />
-          {errors.streetAddress && <Text style={styles.errorMessage}>{errors.streetAddress}</Text>}
-
-          <TextInput
-            style={styles.input}
-            placeholder="CITY / SUBURB"
-            placeholderTextColor="white"
-            value={city}
-            onChangeText={(text) => {
-              setErrors({});
-              setCity(text);
-            }}
-          />
-          {errors.city && <Text style={styles.errorMessage}>{errors.city}</Text>}
-
-          <TextInput
-            style={styles.input}
-            placeholder="PROVINCE"
-            placeholderTextColor="white"
-            value={province}
-            onChangeText={(text) => {
-              setErrors({});
-              setProvince(text);
-            }}
-          />
-          {errors.province && <Text style={styles.errorMessage}>{errors.province}</Text>}
-
-          <TextInput
-            style={styles.input}
-            placeholder="POSTAL CODE"
-            placeholderTextColor="white"
-            value={postalCode}
-            onChangeText={(text) => {
-              setErrors({});
-              setPostalCode(text);
-            }}
-            keyboardType="numeric"
-          />
-          {errors.postalCode && <Text style={styles.errorMessage}>{errors.postalCode}</Text>}
-          <TextInput
-            style={styles.input}
-            placeholder="LOCAL AREA"
-            placeholderTextColor="white"
-            value={localArea}
-            onChangeText={(text) => {
-              setErrors({});
-              setLocalArea(text);
-            }}
-          />
-          {errors.localArea && <Text style={styles.errorMessage}>{errors.localArea}</Text>}
-
-          <TextInput
-            style={styles.input}
-            placeholder="TYPE OF BUSINESS"
-            placeholderTextColor="white"
-            value={type}
-            onChangeText={(text) => {
-              setErrors({});
-              setType(text);
-            }}
-          />
-          {errors.type && <Text style={styles.errorMessage}>{errors.type}</Text>}
-
-          <TextInput
-            style={styles.input}
-            placeholder="ZONE"
-            placeholderTextColor="white"
-            value={zone}
-            onChangeText={(text) => {
-              setErrors({});
-              setZone(text);
-            }}
-          />
-          {errors.zone && <Text style={styles.errorMessage}>{errors.zone}</Text>}
-
-          <TextInput
-            style={styles.input}
-            placeholder="COUNTRY"
-            placeholderTextColor="white"
-            value={country}
-            onChangeText={(text) => {
-              setErrors({});
-              setCountry(text);
-            }}
-          />
-          {errors.country && <Text style={styles.errorMessage}>{errors.country}</Text>}
-
-          <TextInput
-            style={styles.input}
-            placeholder="WEBSITE"
-            placeholderTextColor="white"
-            value={website}
-            onChangeText={(text) => {
-              setErrors({});
-              setWebsite(text);
-            }}
-          />
-          {errors.website && <Text style={styles.errorMessage}>{errors.website}</Text>}
-
-          {/* Date Picker */}
-          <TextInput
-            style={styles.input}
-            placeholder="DATE OF BIRTH"
-            placeholderTextColor="white"
-            value={input.date ? input.date.toLocaleDateString() : ""}
-            onPressIn={input.showDatepicker}
-          />
-          {input.show && (
-            <DateTimePicker
-              testID="dateTimePicker2"
-              value={input.date}
-              mode={input.mode}
-              is24Hour={true}
-              display="default"
-              onChange={input.onChange}
-            />
-          )}
-          {errors.dateOfBirth && <Text style={styles.errorMessage}>{errors.dateOfBirth}</Text>}
-
-          {/* Bio Section */}
-          <TextInput
-            style={styles.textArea}
-            placeholder="BIO"
-            placeholderTextColor="white"
-            value={bio}
-            onChangeText={(text) => {
-              setErrors({});
-              setBio(text);
-            }}
-            multiline
-          />
-        </View>
-
-        <TouchableOpacity style={styles.signInButton} onPress={handleSaveProfile}>
-          <Text style={styles.buttonText}>Continue</Text>
-        </TouchableOpacity>
-      </ScrollView>
+        }
+      />
 
       {/* Error Modal */}
       <Modal visible={isErrorModalVisible} animationType="slide" transparent={true}>

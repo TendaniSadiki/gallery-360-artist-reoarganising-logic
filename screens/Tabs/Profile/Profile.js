@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Linking,
   ScrollView,
   Alert,
+  Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import { signOut } from "firebase/auth";
@@ -14,14 +15,56 @@ import auth from "../../../firebase/firebase.config.js";
 import styles from "./styles.js";
 import { useFetchProfileData } from "../../../hooks/useFetchProfileData.jsx";
 import { useFetchAccountData } from "../../../hooks/useFetchAccountData"; // Custom hook for account data
+import { doc, getDoc } from "firebase/firestore";
+import { FIRESTORE_DB, FIREBASE_AUTH } from "../../../firebase/firebase.config.js";
 
 const SetupProfileScreen = ({ navigation }) => {
   const { userData, name, image, dateOfBirth, bio, signature } = useFetchProfileData();
   const { accountHolder, accountNumber, bankName, branchCode, documentUrl } = useFetchAccountData();
+  const [isProfileIncomplete, setProfileIncomplete] = useState(false);
 
   useEffect(() => {
-    // Reload updated info when the component mounts or updates
-  }, [userData, name, image, dateOfBirth, bio, signature, accountHolder, accountNumber, bankName, branchCode, documentUrl]);
+    checkProfileCompletion();
+  }, [userData, accountHolder, accountNumber, bankName, branchCode, documentUrl]);
+
+  const checkProfileCompletion = async () => {
+    const user = FIREBASE_AUTH.currentUser;
+    if (user) {
+      const uid = user.uid;
+      const userDocRef = doc(FIRESTORE_DB, "artists", uid);
+      const paymentDocRef = doc(FIRESTORE_DB, "paymentDetails", uid);
+
+      const userDoc = await getDoc(userDocRef);
+      const paymentDoc = await getDoc(paymentDocRef);
+
+      if (!userDoc.exists() || !paymentDoc.exists()) {
+        setProfileIncomplete(true);
+      } else {
+        const userData = userDoc.data();
+        const paymentData = paymentDoc.data();
+
+        if (
+          !userData.fullname ||
+          !userData.contactnumber ||
+          !userData.address ||
+          !userData.websiteurl ||
+          !userData.dateofbirth ||
+          !userData.biography ||
+          !userData.imageUrl ||
+          !userData.facebook ||
+          !userData.instagram ||
+          !userData.signature ||
+          !paymentData.accountHolder ||
+          !paymentData.bankName ||
+          !paymentData.accountNumber ||
+          !paymentData.branchCode ||
+          !paymentData.documentUrl
+        ) {
+          setProfileIncomplete(true);
+        }
+      }
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -149,6 +192,25 @@ const SetupProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Profile Incomplete Modal */}
+      <Modal visible={isProfileIncomplete} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.header}>Profile Incomplete</Text>
+            <Text style={styles.errorText}>Please complete your profile to proceed.</Text>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => {
+                setProfileIncomplete(false);
+                navigation.navigate("EditProfile", { userData });
+              }}
+            >
+              <Text style={styles.buttonText}>Complete Profile</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

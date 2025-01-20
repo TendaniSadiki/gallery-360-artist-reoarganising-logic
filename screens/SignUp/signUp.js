@@ -13,10 +13,13 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome5";
 //import ForgetPassword from "../SignIn/ForgetPassword";
 import auth from "../../firebase/firebase.config.js";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { FIRESTORE_DB } from "../../firebase/firebase.config.js";
+
+import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail, sendPasswordResetEmail } from "firebase/auth";
 import ActionButton from "../../components/ActionButton.jsx";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { showToast } from "../../hooks/useToast.jsx";
+import { getDoc, doc, setDoc, serverTimestamp } from "firebase/firestore";
 export default function App({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,6 +28,7 @@ export default function App({ navigation }) {
   const [errors, setErrors] = useState({});
   const [artistAgreesToTerms, setArtistAgreesToTerms] = useState(false);
   const [isErrorModalVisible, setErrorModalVisible] = useState(false);
+  const [isEmailExistsModalVisible, setEmailExistsModalVisible] = useState(false);
 
   const G360_TERMS = "I agree to Gallery360's Terms & Conditions";
 
@@ -33,13 +37,21 @@ export default function App({ navigation }) {
     setArtistAgreesToTerms(artistAgreesToTerms => !artistAgreesToTerms)
   }
 
-  const validateForm = () => {
+  const validateForm = async () => {
     let errors = {};
     if (email.trim() === "") {
       errors.email = "Please enter a valid email";
     } else if (!/\S+@\S+\.\S{2,}/.test(email.replace(/ /g, ""))) {
       errors.email = "Please enter a valid email.";
+    } else {
+      // Check if email already exists
+      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+      if (signInMethods.length > 0) {
+        errors.email = "This email is already in use.";
+        setEmailExistsModalVisible(true);
+      }
     }
+
     if (
       password.length < 8 ||
       password.search(/[a-z]/) < 0 ||
@@ -56,26 +68,98 @@ export default function App({ navigation }) {
 
   const handleSignUp = async () => {
     setIsLoading(true);
-    if (validateForm()) {
+    if (await validateForm()) {
       console.log({ email, password });
-      // setIsLoading(false);
-      // return
       createUserWithEmailAndPassword(auth, email, password)
-        .then(userCredentials => {
+        .then(async (userCredentials) => {
           console.log({ userCredentials });
-          const user = userCredentials.user
-          setIsLoading(false)
-          showToast(`Hi ${user.email}`)
-          navigation.navigate('Profile')
-        }).catch(err => {
-          showToast('Error occurred')
-          setIsLoading(false)
+          const user = userCredentials.user;
+          const uid = user.uid;
+
+          // Default user data with empty fields
+          const defaultUserData = {
+            fullname: "",
+            contactnumber: "",
+            address: {
+              street: "",
+              city: "",
+              province: "",
+              postalCode: "",
+              localArea: "",
+              type: "",
+              zone: "",
+              country: "",
+              latitude: null,
+              longitude: null,
+              countryCode: "",
+              provinceCode: "",
+            },
+            websiteurl: "",
+            dateofbirth: "",
+            biography: "",
+            imageUrl: "",
+            facebook: "",
+            instagram: "",
+            videoUrl: "",
+            isEnabled: false,
+            selectedArtworks: [],
+            signature: "",
+            timeStamp: serverTimestamp(),
+          };
+
+          // Default payment details with empty fields
+          const defaultPaymentDetails = {
+            accountHolder: "",
+            bankName: "",
+            accountNumber: "",
+            branchCode: "",
+            userId: uid,
+            documentName: "",
+            documentUrl: "",
+          };
+
+          try {
+            // Save default user data to Firestore
+            const userDocRef = doc(FIRESTORE_DB, "artists", uid);
+            await setDoc(userDocRef, defaultUserData);
+
+            // Save default payment details to Firestore
+            const paymentDocRef = doc(FIRESTORE_DB, "paymentDetails", uid);
+            await setDoc(paymentDocRef, defaultPaymentDetails);
+
+            console.log("User data and payment details saved to Firestore");
+
+            setIsLoading(false);
+            showToast(`Hi ${user.email}`);
+            navigation.navigate('Profile');
+          } catch (error) {
+            console.error("Error saving data to Firestore:", error);
+            showToast("Error occurred while saving data");
+            setIsLoading(false);
+          }
         })
+        .catch((err) => {
+          console.error("Error creating user:", err);
+          showToast("Error occurred");
+          setIsLoading(false);
+        });
     } else {
       setIsLoading(false);
       setErrorModalVisible(true);
     }
   }
+
+  const handlePasswordReset = async () => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showToast("Password reset email sent. Please check your inbox.");
+      setEmailExistsModalVisible(false);
+    } catch (error) {
+      console.error("Error sending password reset email:", error);
+      showToast("Error sending password reset email. Please try again.");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -179,6 +263,22 @@ export default function App({ navigation }) {
             {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             <TouchableOpacity style={styles.button} onPress={() => setErrorModalVisible(false)}>
+              <Text style={styles.buttonText}>CLOSE</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Email Exists Modal */}
+      <Modal visible={isEmailExistsModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.header}>Email Already Exists</Text>
+            <Text style={styles.errorText}>This email is already in use. Would you like to reset your password?</Text>
+            <TouchableOpacity style={styles.button} onPress={handlePasswordReset}>
+              <Text style={styles.buttonText}>Reset Password</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={() => setEmailExistsModalVisible(false)}>
               <Text style={styles.buttonText}>CLOSE</Text>
             </TouchableOpacity>
           </View>
