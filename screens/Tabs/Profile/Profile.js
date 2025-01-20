@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Modal,
+  ProgressBarAndroid,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import { signOut } from "firebase/auth";
@@ -19,9 +20,11 @@ import { doc, getDoc } from "firebase/firestore";
 import { FIRESTORE_DB, FIREBASE_AUTH } from "../../../firebase/firebase.config.js";
 
 const SetupProfileScreen = ({ navigation }) => {
-  const { userData, name, image, dateOfBirth, bio, signature } = useFetchProfileData();
+  const { userData, name, image, dateOfBirth, bio, signature, address, contactNumber, facebook, instagram, websiteUrl, videoUrl } = useFetchProfileData();
   const { accountHolder, accountNumber, bankName, branchCode, documentUrl } = useFetchAccountData();
   const [isProfileIncomplete, setProfileIncomplete] = useState(false);
+  const [missingFields, setMissingFields] = useState([]);
+  const [completionPercentage, setCompletionPercentage] = useState(0);
 
   useEffect(() => {
     checkProfileCompletion();
@@ -39,29 +42,32 @@ const SetupProfileScreen = ({ navigation }) => {
 
       if (!userDoc.exists() || !paymentDoc.exists()) {
         setProfileIncomplete(true);
+        setMissingFields(["Profile data or payment details are missing"]);
       } else {
         const userData = userDoc.data();
         const paymentData = paymentDoc.data();
+        const fields = [
+          { field: userData.fullname, name: "Full Name" },
+          { field: userData.contactnumber, name: "Contact Number" },
+          { field: userData.address, name: "Address" },
+          { field: userData.websiteurl, name: "Website URL" },
+          { field: userData.dateofbirth, name: "Date of Birth" },
+          { field: userData.biography, name: "Biography" },
+          { field: userData.imageUrl, name: "Image URL" },
+          { field: userData.facebook, name: "Facebook" },
+          { field: userData.instagram, name: "Instagram" },
+          { field: userData.signature, name: "Signature" },
+          { field: paymentData.accountHolder, name: "Account Holder" },
+          { field: paymentData.bankName, name: "Bank Name" },
+          { field: paymentData.accountNumber, name: "Account Number" },
+          { field: paymentData.branchCode, name: "Branch Code" },
+          { field: paymentData.documentUrl, name: "Document URL" },
+        ];
 
-        if (
-          !userData.fullname ||
-          !userData.contactnumber ||
-          !userData.address ||
-          !userData.websiteurl ||
-          !userData.dateofbirth ||
-          !userData.biography ||
-          !userData.imageUrl ||
-          !userData.facebook ||
-          !userData.instagram ||
-          !userData.signature ||
-          !paymentData.accountHolder ||
-          !paymentData.bankName ||
-          !paymentData.accountNumber ||
-          !paymentData.branchCode ||
-          !paymentData.documentUrl
-        ) {
-          setProfileIncomplete(true);
-        }
+        const missing = fields.filter(item => !item.field).map(item => item.name);
+        setMissingFields(missing);
+        setProfileIncomplete(missing.length > 0);
+        setCompletionPercentage(((fields.length - missing.length) / fields.length) * 100);
       }
     }
   };
@@ -142,19 +148,19 @@ const SetupProfileScreen = ({ navigation }) => {
           <Text style={styles.profileHeader}>Account Information</Text>
           <View style={styles.subHeadersContainer}>
             <Text style={styles.subHeaders}>Account Holder:</Text>
-            <Text style={styles.subHeaders}>{accountHolder || "N/A"}</Text>
+            <Text style={{ color: "white" }}>{accountHolder || "N/A"}</Text>
           </View>
           <View style={styles.subHeadersContainer}>
             <Text style={styles.subHeaders}>Account Number:</Text>
-            <Text style={styles.subHeaders}>{accountNumber || "N/A"}</Text>
+            <Text style={{ color: "white" }}>{accountNumber || "N/A"}</Text>
           </View>
           <View style={styles.subHeadersContainer}>
             <Text style={styles.subHeaders}>Bank Name:</Text>
-            <Text style={styles.subHeaders}>{bankName || "N/A"}</Text>
+            <Text style={{ color: "white" }}>{bankName || "N/A"}</Text>
           </View>
           <View style={styles.subHeadersContainer}>
             <Text style={styles.subHeaders}>Branch Code:</Text>
-            <Text style={styles.subHeaders}>{branchCode || "N/A"}</Text>
+            <Text style={{ color: "white" }}>{branchCode || "N/A"}</Text>
           </View>
 
           {/* Display Document Preview */}
@@ -163,7 +169,7 @@ const SetupProfileScreen = ({ navigation }) => {
             {documentUrl ? (
               documentUrl.endsWith(".pdf") ? (
                 <TouchableOpacity onPress={handleDocumentPress}>
-                  <Text style={styles.subHeaders}>Click to open document (PDF)</Text>
+                  <Text style={{ color: "white" }}>Click to open document (PDF)</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity onPress={handleDocumentPress}>
@@ -171,15 +177,31 @@ const SetupProfileScreen = ({ navigation }) => {
                 </TouchableOpacity>
               )
             ) : (
-              <Text style={styles.subHeaders}>Loading document...</Text> // Show loading text if document is not available yet
+              <Text style={{ color: "white" }}>Loading document...</Text> // Show loading text if document is not available yet
             )}
           </View>
 
           <Text style={styles.profileHeader}>Help & Info</Text>
+          <View style={styles.subHeadersContainer}>
+            <Text style={styles.subHeaders}>Contact Number:</Text>
+            <Text style={{ color: "white" }}>{contactNumber}</Text>
+          </View>
+          <View style={styles.subHeadersContainer}>
+            <Text style={styles.subHeaders}>Address:</Text>
+            <Text style={{ color: "white" }}>{address.street}, {address.city}, {address.province}, {address.postalCode}, {address.localArea}, {address.type}, {address.zone}, {address.country}</Text>
+          </View>
+          <View style={styles.subHeadersContainer}>
+            <Text style={styles.subHeaders}>Website URL:</Text>
+            <Text style={{ color: "white" }}>{websiteUrl}</Text>
+          </View>
+          <View style={styles.subHeadersContainer}>
+            <Text style={styles.subHeaders}>Video URL:</Text>
+            <Text style={{ color: "white" }}>{videoUrl}</Text>
+          </View>
           <Text style={styles.subHeaders}>Terms & conditions</Text>
           <View style={styles.subHeadersContainer}>
             <Text style={styles.subHeaders}>Return Policy</Text>
-            <Text style={styles.subHeaders}>Gallery360 Default</Text>
+            <Text style={{ color: "white" }}>Gallery360 Default</Text>
           </View>
         </View>
 
@@ -199,6 +221,16 @@ const SetupProfileScreen = ({ navigation }) => {
           <View style={styles.modalContainer}>
             <Text style={styles.header}>Profile Incomplete</Text>
             <Text style={styles.errorText}>Please complete your profile to proceed.</Text>
+            <ProgressBarAndroid
+              styleAttr="Horizontal"
+              indeterminate={false}
+              progress={completionPercentage / 100}
+              color="#2196F3"
+            />
+            <Text style={styles.percentageText}>{completionPercentage.toFixed(2)}% Complete</Text>
+            {missingFields.map((field, index) => (
+              <Text key={index} style={styles.missingFieldText}>{field}</Text>
+            ))}
             <TouchableOpacity
               style={styles.button}
               onPress={() => {

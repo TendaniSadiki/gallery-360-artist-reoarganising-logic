@@ -10,6 +10,7 @@ import {
   Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import AddSocialMedia from "../../SignUp/AddSocialMedia";
 import { useImageFunctions } from "../../../hooks/useImageFunctions";
 import { FIRESTORE_DB, FIREBASE_AUTH } from "../../../firebase/firebase.config";
@@ -17,26 +18,27 @@ import { updateDoc, doc } from "firebase/firestore";
 
 const SetupProfileScreen = ({ navigation, route }) => {
   const { userData } = route.params;
-  const defaultImage = userData.photoUrl ? { uri: userData.photoUrl } : null;
+  const defaultImage = userData?.photoUrl ? { uri: userData.photoUrl } : null;
 
   const [sourceImage, setImage] = useState(defaultImage); // Set default user image
-  const [fullName, setFullName] = useState(userData.fullname || "");
-  const [contactNumber, setContactNumber] = useState(userData.contactnumber || "");
-  const [streetAddress, setStreetAddress] = useState(userData.address?.street || "");
-  const [city, setCity] = useState(userData.address?.city || "");
-  const [province, setProvince] = useState(userData.address?.province || "");
-  const [postalCode, setPostalCode] = useState(userData.address?.postalCode || "");
-  const [localArea, setLocalArea] = useState(userData.address?.localArea || "");
-  const [type, setType] = useState(userData.address?.type || "");
-  const [zone, setZone] = useState(userData.address?.zone || "");
-  const [country, setCountry] = useState(userData.address?.country || "");
-  const [website, setWebsite] = useState(userData.websiteurl || "");
-  const [facebook, setFacebook] = useState(userData.facebook || "");
-  const [instagram, setInstagram] = useState(userData.instagram || "");
-  const [dateOfBirth, setDateOfBirth] = useState(userData.dateofbirth || "");
-  const [bio, setBio] = useState(userData.biography || "");
+  const [fullName, setFullName] = useState(userData?.fullname || "");
+  const [contactNumber, setContactNumber] = useState(userData?.contactnumber || "");
+  const [streetAddress, setStreetAddress] = useState(userData?.address?.street || "");
+  const [city, setCity] = useState(userData?.address?.city || "");
+  const [province, setProvince] = useState(userData?.address?.province || "");
+  const [postalCode, setPostalCode] = useState(userData?.address?.postalCode || "");
+  const [localArea, setLocalArea] = useState(userData?.address?.localArea || "");
+  const [type, setType] = useState(userData?.address?.type || "");
+  const [zone, setZone] = useState(userData?.address?.zone || "");
+  const [country, setCountry] = useState(userData?.address?.country || "");
+  const [website, setWebsite] = useState(userData?.websiteurl || "");
+  const [facebook, setFacebook] = useState(userData?.facebook || "");
+  const [instagram, setInstagram] = useState(userData?.instagram || "");
+  const [dateOfBirth, setDateOfBirth] = useState(userData?.dateofbirth || "");
+  const [bio, setBio] = useState(userData?.biography || "");
   const [errors, setErrors] = useState({});
   const [isErrorModalVisible, setErrorModalVisible] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const [modalIsVisible, setModalIsVisible] = useState(false);
   const [isImagePreviewVisible, setImagePreviewVisible] = useState(false);
@@ -147,38 +149,32 @@ const SetupProfileScreen = ({ navigation, route }) => {
     };
 
     // Conditionally add `photoUrl` only if it exists
-    if (imageUrl || userData.imageUrl) {
+    if (imageUrl || userData?.imageUrl) {
       updatePayload.imageUrl = imageUrl || userData.imageUrl;
     }
 
     updateDoc(docRef, updatePayload)
       .then(() => {
         alert("Profile updated successfully");
-        navigation.popToTop();
+        navigation.navigate("ArtWorkUpdate", { userData });
       })
       .catch((error) => {
         alert("Error updating profile: " + error.message);
       });
   };
 
-  const handleSaveProfile = () => {
-    console.log("Profile Data:");
-    console.log("Image:", imageUrl || userData.photoUrl);
-    console.log("Full Name:", fullName);
-    console.log("Contact Number:", contactNumber);
-    console.log("Street Address:", streetAddress);
-    console.log("City:", city);
-    console.log("Province:", province);
-    console.log("Postal Code:", postalCode);
-    console.log("Local Area:", localArea);
-    console.log("Type:", type);
-    console.log("Zone:", zone);
-    console.log("Country:", country);
-    console.log("Website:", website);
-    console.log("Date of Birth:", dateOfBirth);
-    console.log("Bio:", bio);
-
+  const handleNext = () => {
     updateProfileData();
+  };
+
+  const handleSkip = () => {
+    navigation.navigate("ArtWorkUpdate", { userData });
+  };
+
+  const handleDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || new Date(dateOfBirth);
+    setShowDatePicker(false);
+    setDateOfBirth(currentDate.toISOString().split('T')[0]); // Format date as YYYY-MM-DD
   };
 
   return (
@@ -331,14 +327,23 @@ const SetupProfileScreen = ({ navigation, route }) => {
           value={website}
           onChangeText={setWebsite}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Date of Birth"
-          placeholderTextColor="white"
-          value={dateOfBirth}
-          onChangeText={setDateOfBirth}
-          keyboardType="numeric"
-        />
+        <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+          <TextInput
+            style={styles.input}
+            placeholder="Date of Birth"
+            placeholderTextColor="white"
+            value={dateOfBirth}
+            editable={false} // Make the TextInput non-editable
+          />
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={new Date(dateOfBirth)}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
         <TextInput
           style={styles.bioInput}
           placeholder="Bio"
@@ -349,9 +354,15 @@ const SetupProfileScreen = ({ navigation, route }) => {
         />
         <TouchableOpacity
           style={styles.signInButton}
-          onPress={handleSaveProfile}
+          onPress={handleNext}
         >
-          <Text style={styles.buttonText}>Save Profile</Text>
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.signInButton}
+          onPress={handleSkip}
+        >
+          <Text style={styles.buttonText}>Skip</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -421,6 +432,8 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
+
+    marginTop: 10,
   },
   buttonText: {
     color: "#fff",

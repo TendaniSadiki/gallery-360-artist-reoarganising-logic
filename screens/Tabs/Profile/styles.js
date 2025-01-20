@@ -25,8 +25,7 @@ export default styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: {
-    color: "#fff",
-    fontSize: 18,
+    color: "white",
     fontWeight: "bold",
   },
   header: {
@@ -114,5 +113,38 @@ export default styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     alignItems: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    width: "80%",
+    padding: 20,
+    backgroundColor: "white",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  errorText: {
+    color: "red",
+    marginBottom: 20,
+  },
+  button: {
+    backgroundColor: "#2196F3",
+    padding: 10,
+    borderRadius: 5,
+  },
+  percentageText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "black",
+  },
+  missingFieldText: {
+    color: "red",
+    fontSize: 14,
+    marginTop: 5,
   },
 });

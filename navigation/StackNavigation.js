@@ -29,6 +29,9 @@ import NotificationPolicy from "../screens/Tabs/Notifications/NotificationsPolic
 import Profiles from "../screens/Tabs/Profile/Profile";
 import EditProfile from "../screens/Tabs/Profile/ProfileShow";
 import DashboardScreen from "../screens/Tabs/Dashboard/Dashboard";
+import SignatureUpdate from "../screens/Tabs/Profile/SignatureUpdate";
+import PaymentUpdate from "../screens/Tabs/Profile/PaymentUpdate";
+import ArtWorkUpdate from "../screens/Tabs/Profile/Artworkupdate";
 
 const Stack = createNativeStackNavigator();
 
@@ -132,6 +135,10 @@ const ProfileStack = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Profile" component={Profiles} />
       <Stack.Screen name="EditProfile" component={EditProfile} />
+      <Stack.Screen name="SignatureUpdate" component={SignatureUpdate} />
+      <Stack.Screen name="PaymentUpdate" component={PaymentUpdate} />
+      <Stack.Screen name="ArtWorkUpdate" component={ArtWorkUpdate} />
+
     </Stack.Navigator>
   );
 };
