@@ -51,7 +51,7 @@ jobs:
         run: cat /home/expo/workingdir/build/logs/EASBuildWorker.log
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4  // Update to use version v4
+        uses: actions/upload-artifact@v4
         with:
           name: android-apk
           path: |
