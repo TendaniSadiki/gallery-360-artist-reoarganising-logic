@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5"; // Replace "FontAwesome5" with the icon library of your choice.
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../firebase/firebase.config";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 
 const ArtWorkUpdate = ({ route, navigation }) => {
   const artworks = [
@@ -47,6 +47,23 @@ const ArtWorkUpdate = ({ route, navigation }) => {
 
   const { userData } = route.params; // Get userData passed from previous screen
 
+  useEffect(() => {
+    const fetchSelectedArtworks = async () => {
+      const user = FIREBASE_AUTH.currentUser;
+      if (user) {
+        const docRef = doc(FIRESTORE_DB, "artists", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.selectedArtworks) {
+            setSelectedArtworks(data.selectedArtworks);
+          }
+        }
+      }
+    };
+    fetchSelectedArtworks();
+  }, []);
+
   // Function to handle artwork selection
   function handleArtworkSelection(artwork) {
     setSelectedArtworks((prevSelected) =>
@@ -79,15 +96,14 @@ const ArtWorkUpdate = ({ route, navigation }) => {
 
         // Add selected artworks to userData
         const updatedUserData = {
-          ...userData,
           selectedArtworks: selectedArtworks, // Add selected artworks
         };
 
         // Save updated data to Firestore
-        await updateDoc(userDocRef, updatedUserData);
+        await updateDoc(userDocRef, updatedUserData, { merge: true });
 
         // Navigate to the next screen after saving
-        navigation.navigate("SignatureUpdate", { userData: updatedUserData });
+        navigation.navigate("SignatureUpdate", { userData: { ...userData, ...updatedUserData } });
       } else {
         console.log("User is not authenticated");
         navigation.navigate("Login");
@@ -152,7 +168,7 @@ const ArtWorkUpdate = ({ route, navigation }) => {
       </View>
 
       {/* Continue Button */}
-      <View style={styles.buttonContainer}>
+      <View style={[styles.buttonContainer]}>
         <TouchableOpacity
           style={styles.continueButton}
           onPress={handleSaveProfile}
@@ -160,7 +176,7 @@ const ArtWorkUpdate = ({ route, navigation }) => {
           <Text style={styles.buttonText}>Continue</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.continueButton}
+          style={[styles.signInButton]}
           onPress={handleSkip}
         >
           <Text style={styles.buttonText}>Skip</Text>

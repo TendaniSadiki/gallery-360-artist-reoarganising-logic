@@ -172,7 +172,7 @@ const SetupProfileScreen = ({ navigation, route }) => {
   };
 
   const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || new Date(dateOfBirth);
+    const currentDate = selectedDate || new Date();
     setShowDatePicker(false);
     setDateOfBirth(currentDate.toISOString().split('T')[0]); // Format date as YYYY-MM-DD
   };
@@ -338,7 +338,7 @@ const SetupProfileScreen = ({ navigation, route }) => {
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
-            value={new Date(dateOfBirth)}
+            value={dateOfBirth ? new Date(dateOfBirth) : new Date()}
             mode="date"
             display="default"
             onChange={handleDateChange}

@@ -220,7 +220,7 @@ const SetupProfileScreen = ({ navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.header}>Profile Incomplete</Text>
-            <Text style={styles.errorText}>Please complete your profile to proceed.</Text>
+            <Text style={styles.smallerText}>Please complete your profile to proceed.</Text>
             <ProgressBarAndroid
               styleAttr="Horizontal"
               indeterminate={false}
@@ -232,7 +232,7 @@ const SetupProfileScreen = ({ navigation }) => {
               <Text key={index} style={styles.missingFieldText}>{field}</Text>
             ))}
             <TouchableOpacity
-              style={styles.button}
+              style={styles.signInButton}
               onPress={() => {
                 setProfileIncomplete(false);
                 navigation.navigate("EditProfile", { userData });

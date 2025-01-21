@@ -126,12 +126,12 @@ const SignatureUpdate = ({ route, navigation }) => {
         >
           <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
-         <TouchableOpacity
-                  style={styles.signInButton}
-                  onPress={handleSkip}
-                >
-                  <Text style={styles.buttonText}>Skip</Text>
-                </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.signInButton, { alignSelf: "center", marginTop: 110 }]}
+          onPress={handleSkip}
+        >
+          <Text style={styles.buttonText}>Skip</Text>
+        </TouchableOpacity>
       </ScrollView>
       <Modal
         animationType="slide"

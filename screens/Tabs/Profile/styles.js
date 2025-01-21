@@ -123,7 +123,7 @@ export default styles = StyleSheet.create({
   modalContainer: {
     width: "80%",
     padding: 20,
-    backgroundColor: "white",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     borderRadius: 10,
     alignItems: "center",
   },
@@ -140,7 +140,7 @@ export default styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     fontWeight: "bold",
-    color: "black",
+    color: "white",
   },
   missingFieldText: {
     color: "red",
