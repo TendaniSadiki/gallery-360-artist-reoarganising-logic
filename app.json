@@ -38,8 +38,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "ab99d609-f17d-4165-886e-0cea53117890"
+        "projectId": "1e0c4051-8025-4dc6-82cd-2dfa9614f52a"
       }
-    }
+    },
+    "owner": "edmond_sadiki"  // Add this line to set the owner of the project
   }
 }

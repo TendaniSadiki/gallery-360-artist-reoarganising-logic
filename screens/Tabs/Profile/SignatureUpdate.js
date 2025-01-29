@@ -6,15 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Button,
   Modal,
 } from "react-native";
-// import { SignatureView } from "react-native-signature-capture-view";
 import SignatureScreen from "react-native-signature-canvas";
-import { setDoc, doc, serverTimestamp } from "firebase/firestore";
-import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebase/firebase.config";
+import { updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../firebase/firebase.config";
 
-const MyPage = ({ route, navigation }) => {
+const SignatureUpdate = ({ route, navigation }) => {
   const ref = useRef();
   const auth = FIREBASE_AUTH;
   const [signature, setSignature] = useState(""); // Holds the captured signature
@@ -32,7 +30,7 @@ const MyPage = ({ route, navigation }) => {
       return;
     }
 
-    setDoc(
+    updateDoc(
       doc(FIRESTORE_DB, "artists", user.uid),
       {
         signature: signature, // Save the captured signature
@@ -44,7 +42,7 @@ const MyPage = ({ route, navigation }) => {
       .then(() => {
         // show
         Alert.alert("Your signature has been uploaded successfully!");
-        navigation.navigate('Payment')
+        navigation.navigate('PaymentUpdate')
       })
       .catch((error) => {
         Alert.alert("Error uploading signature. Please try again.");
@@ -69,7 +67,9 @@ const MyPage = ({ route, navigation }) => {
     ref.current.clearSignature()
     setSignature(null)
   };
-
+  const handleSkip = () => {
+    navigation.navigate("PaymentUpdate");
+  };
   return (
     <View style={styles.container}>
       <ScrollView
@@ -124,7 +124,13 @@ const MyPage = ({ route, navigation }) => {
           style={styles.continueButton}
           onPress={() => writeUserData()}
         >
-          <Text style={styles.buttonText}>Continue</Text>
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.signInButton, { alignSelf: "center", marginTop: 110 }]}
+          onPress={handleSkip}
+        >
+          <Text style={styles.buttonText}>Skip</Text>
         </TouchableOpacity>
       </ScrollView>
       <Modal
@@ -222,4 +228,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MyPage;
+export default SignatureUpdate;

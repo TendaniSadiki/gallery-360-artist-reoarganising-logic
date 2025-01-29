@@ -8,6 +8,7 @@ import {
   TextInput,
   ScrollView,
   Alert,
+  Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import ForgetPassword from "./ForgetPassword";
@@ -19,23 +20,23 @@ import { FIRESTORE_DB } from "../../firebase/firebase.config.js";
 import { collection, doc, getDoc } from "firebase/firestore";
 import { showToast } from "../../hooks/useToast";
 
-
 export default function SignInScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false); // New state to manage password visibility
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [isErrorModalVisible, setErrorModalVisible] = useState(false);
+
+  const handleOpenModal = () => setModalVisible(true);
+  const handleCloseModal = () => setModalVisible(false);
+  const handleOpenErrorModal = () => setErrorModalVisible(true);
+  const handleCloseErrorModal = () => setErrorModalVisible(false);
 
   console.log('in sign in');
 
-
-  const [isModalVisible, setModalVisible] = useState(false);
-  const handleOpenModal = () => setModalVisible(true, console.log('open modal'));
-  const handleCloseModal = () => setModalVisible(false, console.log('close modal'));
   console.log('Sign in');
-
 
   useEffect(() => {
     console.log({ authInSignIn: auth });
@@ -64,10 +65,11 @@ export default function SignInScreen({ navigation }) {
       newErrors.password = "Please enter your password.";
     }
 
-    // If errors are found, update the state and return
+    // If errors are found, update the state and show error modal
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setIsLoading(false);
+      handleOpenErrorModal();
       return;
     }
 
@@ -75,25 +77,15 @@ export default function SignInScreen({ navigation }) {
       // Sign in the user with email and password
       const userCredentials = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredentials.user;
-      showToast(user.email)
-      // setIsLoading(false);
-      // return
+      showToast(user.email);
+
       // Check if the user's email is verified
       if (!user.emailVerified) {
-        const collectionRef = collection(FIRESTORE_DB, 'artists')
-        const docRef = doc(collectionRef, user.uid)
-        getDoc(docRef).then(async userProfile => {
-          if(userProfile.exists()) {
-            setErrors({ email: "Please verify your email before signing in." });
-            await auth.signOut();
-            setIsLoading(false);
-            return;
-          } else {
-            setIsLoading(false);
-            navigation.replace('Profile')
-          }
-        })
-
+        setErrors({ email: "Please verify your email before signing in." });
+        await auth.signOut();
+        setIsLoading(false);
+        handleOpenErrorModal();
+        return;
       }
 
       // If successful, reset errors and navigate to the next screen
@@ -112,9 +104,9 @@ export default function SignInScreen({ navigation }) {
         setErrors({ general: "Failed to connect to the database. Please try again later." });
       }
       setIsLoading(false);
+      handleOpenErrorModal();
     }
   };
-
 
   return (
     <View style={styles.container}>
@@ -147,13 +139,10 @@ export default function SignInScreen({ navigation }) {
             placeholderTextColor="white"
             value={email}
             onChangeText={setEmail}
-            autoCompleteType="email" // Auto-complete email address on iOS (deprecated, use 'autoComplete' for new versions)
-            autoComplete="email" // 
+            autoCompleteType="email"
+            autoComplete="email"
             textContentType="emailAddress"
-
           />
-          {/* Display error message for email */}
-          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
           {/* Password Input */}
           <View style={styles.passwordContainer}>
@@ -161,7 +150,7 @@ export default function SignInScreen({ navigation }) {
               style={[styles.input, errors.password && styles.inputError]}
               placeholder="Password"
               placeholderTextColor="white"
-              secureTextEntry={!isPasswordVisible} // Toggles the visibility
+              secureTextEntry={!isPasswordVisible}
               value={password}
               onChangeText={setPassword}
               autoComplete="password"
@@ -178,7 +167,6 @@ export default function SignInScreen({ navigation }) {
               />
             </TouchableOpacity>
           </View>
-          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
           <TouchableOpacity style={styles.button} onPress={handleOpenModal}>
             <Text style={styles.smallerButtonText}>I forgot my password</Text>
@@ -196,10 +184,23 @@ export default function SignInScreen({ navigation }) {
 
       {/* Password Reset Modal */}
       <ForgetPassword isModalVisible={isModalVisible} handleCloseModal={handleCloseModal} />
+
+      {/* Error Modal */}
+      <Modal visible={isErrorModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.header}>Error</Text>
+            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+            {errors.general && <Text style={styles.errorText}>{errors.general}</Text>}
+            <TouchableOpacity style={styles.button} onPress={handleCloseErrorModal}>
+              <Text style={styles.buttonText}>CLOSE</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
-
-
 }
 
 const styles = StyleSheet.create({
@@ -308,5 +309,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: -10, // Adjust based on layout
     marginBottom: 10,
-  }
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "80%",
+    padding: 20,
+    backgroundColor: "black",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 10,
+    textAlign: "center",
+  },
 });

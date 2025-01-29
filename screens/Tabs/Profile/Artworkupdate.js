@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,12 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
+  ScrollView,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5"; // Replace "FontAwesome5" with the icon library of your choice.
-import {FIREBASE_AUTH, FIRESTORE_DB } from "../../firebase/firebase.config";
-import { doc, setDoc } from "firebase/firestore";
+import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../firebase/firebase.config";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 
-const MyPage = ({ route, navigation }) => {
+const ArtWorkUpdate = ({ route, navigation }) => {
   const artworks = [
     "Painting",
     "Drawing",
@@ -46,6 +47,23 @@ const MyPage = ({ route, navigation }) => {
 
   const { userData } = route.params; // Get userData passed from previous screen
 
+  useEffect(() => {
+    const fetchSelectedArtworks = async () => {
+      const user = FIREBASE_AUTH.currentUser;
+      if (user) {
+        const docRef = doc(FIRESTORE_DB, "artists", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.selectedArtworks) {
+            setSelectedArtworks(data.selectedArtworks);
+          }
+        }
+      }
+    };
+    fetchSelectedArtworks();
+  }, []);
+
   // Function to handle artwork selection
   function handleArtworkSelection(artwork) {
     setSelectedArtworks((prevSelected) =>
@@ -78,15 +96,14 @@ const MyPage = ({ route, navigation }) => {
 
         // Add selected artworks to userData
         const updatedUserData = {
-          ...userData,
           selectedArtworks: selectedArtworks, // Add selected artworks
         };
 
         // Save updated data to Firestore
-        await setDoc(userDocRef, updatedUserData);
+        await updateDoc(userDocRef, updatedUserData, { merge: true });
 
         // Navigate to the next screen after saving
-        navigation.navigate("Signature", { userData: updatedUserData });
+        navigation.navigate("SignatureUpdate", { userData: { ...userData, ...updatedUserData } });
       } else {
         console.log("User is not authenticated");
         navigation.navigate("Login");
@@ -95,8 +112,13 @@ const MyPage = ({ route, navigation }) => {
       console.error("Error saving profile:", error);
     }
   };
+
+  const handleSkip = () => {
+    navigation.navigate("SignatureUpdate", { userData });
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       {/* Paragraph */}
       <Text style={styles.paragraph}>
         There are many types of artworks created by artists across different
@@ -146,17 +168,18 @@ const MyPage = ({ route, navigation }) => {
       </View>
 
       {/* Continue Button */}
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "flex-end",
-        }}
-      >
+      <View style={[styles.buttonContainer]}>
         <TouchableOpacity
           style={styles.continueButton}
           onPress={handleSaveProfile}
         >
           <Text style={styles.buttonText}>Continue</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.signInButton]}
+          onPress={handleSkip}
+        >
+          <Text style={styles.buttonText}>Skip</Text>
         </TouchableOpacity>
       </View>
 
@@ -172,7 +195,7 @@ const MyPage = ({ route, navigation }) => {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -215,86 +238,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
   },
-  paragraph: {
-    marginTop: 40,
-    fontSize: 20,
-    color: "white",
-    marginBottom: 20,
-  },
-  searchInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1E1E1E",
-    borderRadius: 10,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: 16,
-    color: "#CEB89E",
-  },
-  continueButton: {
-    // position: "absolute",
-    backgroundColor: "#CEB89E",
-    height: 50,
-    borderRadius: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
-    alignSelf: "center",
-    // bottom: 40,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  artWorks: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "white",
-    textAlign: "left",
-  },
-  welcomeHeader: {
-    color: "white",
-    marginLeft: 10,
-    fontSize: 34,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  artworksHeader: {
-    color: "white",
-    fontSize: 16,
-    marginLeft: 10,
-    marginBottom: 10,
-  },
-  signInButton: {
-    width: "30%",
-    height: 40,
-    backgroundColor: "gray",
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 15,
-  },
-  newArtworkContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
   checkboxContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -303,29 +246,29 @@ const styles = StyleSheet.create({
     backgroundColor: "gray",
     borderRadius: 15,
   },
-  checkboxText: {
-    color: "white",
-    textTransform: "uppercase",
-  },
   selectedCheckbox: {
     backgroundColor: "#CEB89E",
   },
-  selectedText: {
-    fontWeight: "bold",
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    marginBottom: 20, // Ensure buttons are visible
   },
-  // artWorks: {
-  //   flexDirection: "column",
-  // },
-
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderWidth: 2,
-    borderColor: "white",
-    borderRadius: 5,
+  continueButton: {
+    backgroundColor: "#CEB89E",
+    height: 50,
+    borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
+    width: "48%",
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "white",
+    textAlign: "left",
   },
   modalOverlay: {
     flex: 1,
@@ -348,4 +291,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MyPage;
+export default ArtWorkUpdate;
