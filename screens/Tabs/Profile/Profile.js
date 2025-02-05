@@ -177,7 +177,7 @@ const SetupProfileScreen = ({ navigation }) => {
                 </TouchableOpacity>
               )
             ) : (
-              <Text style={{ color: "white" }}>Loading document...</Text> // Show loading text if document is not available yet
+              <Text style={{ color: "white" }}>No document found</Text> // Show message if no document is found
             )}
           </View>
 

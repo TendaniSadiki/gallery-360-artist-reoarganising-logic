@@ -8,8 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome"; 
-import Carousel from 'react-native-reanimated-carousel'; 
+import Icon from "react-native-vector-icons/FontAwesome";
+import PagerView from 'react-native-pager-view';
 import { useFetchProfileData } from "../../../hooks/useFetchProfileData.jsx";
 
 // Utility function to format date
@@ -22,7 +22,7 @@ const formatDate = (timestamp) => {
 };
 
 const ExhibitionScreen = ({ navigation, route }) => {
-  const { item } = route.params; 
+  const { item } = route.params;
   
   const { userData, loading, error } = useFetchProfileData();
 
@@ -92,15 +92,13 @@ const ExhibitionScreen = ({ navigation, route }) => {
         </View>
 
         {/* Carousel of Images */}
-        <Carousel
-          data={item.imgUrls}
-          renderItem={({ item }) => (
-            <Image source={{ uri: item.imgUrl }} style={styles.carouselImage} />
-          )}
-          width={300}
-          sliderWidth={300}
-          itemWidth={160}
-        />
+        <PagerView style={styles.carousel} initialPage={0}>
+          {item.imgUrls.map((img, index) => (
+            <View style={styles.page} key={index}>
+              <Image source={{ uri: img.imgUrl }} style={styles.carouselImage} />
+            </View>
+          ))}
+        </PagerView>
 
         {/* Full Description */}
         <View style={styles.viewsContainer}>
@@ -194,12 +192,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "white",
   },
+  carousel: {
+    height: 200,
+    marginVertical: 20,
+  },
+  page: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   carouselImage: {
-    width: 150,
-    height: 150,
+    width: "100%",
+    height: 200,
     borderRadius: 15,
     alignSelf: "center",
-    marginVertical: 10,
   },
   description: {
     fontSize: 16,
