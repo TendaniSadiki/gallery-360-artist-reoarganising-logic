@@ -126,7 +126,7 @@ const SetupProfileScreen = ({ navigation }) => {
           const place = `${streetAddress}, ${city}, ${province}, ${country}`
           showToast(place)
           
-          const result = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${place}&key=AIzaSyCprPVV3OJgeeEXYVZ0d3tyEK8QEAjVMpw`, {
+          const result = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${place}&key=AIzaSyAFYvCUuEV-Q9muUJJ8UEeE198RPWcNDBk`, {
             method: 'POST'
           })
           if (!result.ok) {
@@ -176,7 +176,7 @@ const SetupProfileScreen = ({ navigation }) => {
 
           // Save the profile data to Firestore
           const userDocRef = doc(FIRESTORE_DB, "artists", uid);
-          await updateDocD(userDocRef, userData);
+          await updateDoc(userDocRef, userData);
 
           // Navigate to the Artwork screen, passing userData
           navigation.navigate("Artwork", { userData });

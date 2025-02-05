@@ -36,6 +36,7 @@ const SetupProfileScreen = ({ navigation, route }) => {
   const [instagram, setInstagram] = useState(userData?.instagram || "");
   const [dateOfBirth, setDateOfBirth] = useState(userData?.dateofbirth || "");
   const [bio, setBio] = useState(userData?.biography || "");
+  const [idNumber, setIdNumber] = useState("");
   const [errors, setErrors] = useState({});
   const [isErrorModalVisible, setErrorModalVisible] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -175,6 +176,18 @@ const SetupProfileScreen = ({ navigation, route }) => {
     const currentDate = selectedDate || new Date();
     setShowDatePicker(false);
     setDateOfBirth(currentDate.toISOString().split('T')[0]); // Format date as YYYY-MM-DD
+  };
+
+  const handleIdNumberChange = (text) => {
+    setIdNumber(text);
+    if (text.length >= 6) {
+      const year = text.substring(0, 2);
+      const month = text.substring(2, 4);
+      const day = text.substring(4, 6);
+      const fullYear = parseInt(year) < 50 ? `20${year}` : `19${year}`; // Adjust century
+      const date = new Date(`${fullYear}-${month}-${day}`);
+      setDateOfBirth(date.toISOString().split('T')[0]);
+    }
   };
 
   return (
@@ -326,6 +339,14 @@ const SetupProfileScreen = ({ navigation, route }) => {
           placeholderTextColor="white"
           value={website}
           onChangeText={setWebsite}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="ID Number"
+          placeholderTextColor="white"
+          value={idNumber}
+          onChangeText={handleIdNumberChange}
+          keyboardType="numeric" // Ensure numeric input
         />
         <TouchableOpacity onPress={() => setShowDatePicker(true)}>
           <TextInput
