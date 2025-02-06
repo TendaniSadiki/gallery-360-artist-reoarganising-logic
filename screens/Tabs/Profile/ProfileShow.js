@@ -415,10 +415,10 @@ const SetupProfileScreen = ({ navigation, route }) => {
       {/* Image Preview Modal */}
       <Modal visible={isImagePreviewVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
+          <View style={styles.fullImageContainer}>
             <Image
               source={imageUrl ? { uri: imageUrl } : sourceImage}
-              style={styles.previewImage}
+              style={styles.fullImage}
             />
             <TouchableOpacity style={styles.button} onPress={handleCloseImagePreview}>
               <Text style={styles.buttonText}>CLOSE</Text>
@@ -535,6 +535,18 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     marginBottom: 20,
+  },
+  fullImageContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  fullImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
   },
 });
 

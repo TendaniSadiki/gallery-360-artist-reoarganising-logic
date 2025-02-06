@@ -147,4 +147,25 @@ export default styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 5,
   },
+  fullImageContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  fullImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    backgroundColor: '#CEB89E',
+    padding: 10,
+    borderRadius: 5,
+    zIndex: 1, // Ensure the button is on top
+  },
 });

@@ -25,6 +25,10 @@ const SetupProfileScreen = ({ navigation }) => {
   const [isProfileIncomplete, setProfileIncomplete] = useState(false);
   const [missingFields, setMissingFields] = useState([]);
   const [completionPercentage, setCompletionPercentage] = useState(0);
+  const [isImagePreviewVisible, setImagePreviewVisible] = useState(false);
+
+  const handleOpenImagePreview = () => setImagePreviewVisible(true);
+  const handleCloseImagePreview = () => setImagePreviewVisible(false);
 
   useEffect(() => {
     checkProfileCompletion();
@@ -98,6 +102,14 @@ const SetupProfileScreen = ({ navigation }) => {
     }
   };
 
+  const handleVideoPress = () => {
+    if (videoUrl) {
+      Linking.openURL(videoUrl);
+    } else {
+      Alert.alert("No Video", "No video available to play.");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -110,10 +122,12 @@ const SetupProfileScreen = ({ navigation }) => {
 
         <View>
           <View style={styles.imageContainer}>
-            <Image
-              style={{ width: 150, height: 150, alignSelf: "center", borderRadius: 75 }}
-              source={image}
-            />
+            <TouchableOpacity onPress={handleOpenImagePreview}>
+              <Image
+                style={{ width: 150, height: 150, alignSelf: "center", borderRadius: 75 }}
+                source={image}
+              />
+            </TouchableOpacity>
             <Text style={{ color: "white", fontSize: 22, fontWeight: "bold", padding: 5 }}>
               {name}
             </Text>
@@ -195,8 +209,10 @@ const SetupProfileScreen = ({ navigation }) => {
             <Text style={{ color: "white" }}>{websiteUrl}</Text>
           </View>
           <View style={styles.subHeadersContainer}>
-            <Text style={styles.subHeaders}>Video URL:</Text>
-            <Text style={{ color: "white" }}>{videoUrl}</Text>
+            <Text style={styles.subHeaders}>Video:</Text>
+            <TouchableOpacity onPress={handleVideoPress}>
+              <Text style={{ color: "white" }}>Click to play video</Text>
+            </TouchableOpacity>
           </View>
           <Text style={styles.subHeaders}>Terms & conditions</Text>
           <View style={styles.subHeadersContainer}>
@@ -239,6 +255,21 @@ const SetupProfileScreen = ({ navigation }) => {
               }}
             >
               <Text style={styles.buttonText}>Complete Profile</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Image Preview Modal */}
+      <Modal visible={isImagePreviewVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.fullImageContainer}>
+            <Image
+              source={image}
+              style={styles.fullImage}
+            />
+            <TouchableOpacity style={styles.closeButton} onPress={handleCloseImagePreview}>
+              <Text style={styles.buttonText}>CLOSE</Text>
             </TouchableOpacity>
           </View>
         </View>
